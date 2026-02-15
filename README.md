@@ -1,6 +1,6 @@
 # sora-kaigi
 
-Zoom-style conferencing built on Kaigi over Sora Nexus / SoraNet.
+Video + audio conferencing built on Kaigi over Sora Nexus / SoraNet powered by Hyperledger Iroha 3.
 
 This repo is intentionally split into small building blocks. Right now the focus is on the
 networking “spine” (SoraNet relay handshake + Kaigi stream open) so we can test the end-to-end
