@@ -1,0 +1,25 @@
+[package]
+name = "kaigi-soranet-client"
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+blake3 = { workspace = true }
+hex = { workspace = true }
+quinn = { workspace = true }
+reqwest = { workspace = true }
+rustls = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+rand_core = { version = "0.9.5", default-features = false, features = ["os_rng", "std"] }
+
+# Reuse the real SoraNet/Kaigi handshake + Norito encoding from the upstream repo.
+iroha_crypto = { path = "../../../iroha/crates/iroha_crypto" }
+norito = { path = "../../../iroha/crates/norito" }

@@ -1,0 +1,27 @@
+[package]
+name = "kaigi-hub-echo"
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+futures-util = { workspace = true }
+hex = { workspace = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+norito = { path = "../../../iroha/crates/norito" }
+kaigi-wire = { path = "../kaigi-wire" }
+
+[features]
+# These are referenced inside Norito derive macros via `cfg(feature = "...")`.
+# Defining them here keeps Rust's `unexpected_cfgs` lint quiet without changing behaviour.
+schema-structural = []
+packed-struct = []
+compact-len = []

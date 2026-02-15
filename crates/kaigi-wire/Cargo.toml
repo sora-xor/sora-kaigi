@@ -1,0 +1,21 @@
+[package]
+name = "kaigi-wire"
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+norito = { path = "../../../iroha/crates/norito" }
+serde = { workspace = true, optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]
+# These are referenced inside Norito derive macros via `cfg(feature = \"...\")`.
+schema-structural = []
+packed-struct = []
+compact-len = []
+
