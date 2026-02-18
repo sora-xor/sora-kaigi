@@ -1,0 +1,97 @@
+{
+  "schema": "kaigi-client-release-readiness-gates/v1",
+  "frozen_at": "2026-02-15",
+  "release_train": "2027-01-31-bigbang-ga",
+  "gates": [
+    {
+      "workspace_id": "android",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 30,
+      "observed_rto_minutes": 18,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
+      "workspace_id": "ios",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 30,
+      "observed_rto_minutes": 22,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
+      "workspace_id": "ipados",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 30,
+      "observed_rto_minutes": 23,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
+      "workspace_id": "linux",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 20,
+      "observed_rto_minutes": 14,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
+      "workspace_id": "macos",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 20,
+      "observed_rto_minutes": 12,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
+      "workspace_id": "web",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": false,
+      "fallback_drill_status": "n/a",
+      "max_rto_minutes": null,
+      "observed_rto_minutes": null,
+      "evidence_refs": [
+        "docs/client-release-manifest.json"
+      ]
+    },
+    {
+      "workspace_id": "windows",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 20,
+      "observed_rto_minutes": 15,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    }
+  ]
+}

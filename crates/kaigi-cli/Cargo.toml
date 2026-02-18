@@ -22,6 +22,7 @@ tracing-subscriber = { workspace = true }
 x25519-dalek = { workspace = true }
 
 kaigi-soranet-client = { path = "../kaigi-soranet-client" }
+kaigi-platform-contract = { path = "../kaigi-platform-contract" }
 kaigi-wire = { path = "../kaigi-wire" }
 norito = { path = "../../../iroha/crates/norito" }
 iroha = { path = "../../../iroha/crates/iroha", optional = true }

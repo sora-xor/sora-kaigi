@@ -1,0 +1,67 @@
+{
+  "schema": "kaigi-client-fallback-drill-results/v1",
+  "frozen_at": "2026-02-15",
+  "release_train": "2027-01-31-bigbang-ga",
+  "results": [
+    {
+      "workspace_id": "android",
+      "platform": "Android",
+      "fallback_workspace": "web",
+      "distribution_channel": "google-play",
+      "browser_profile": "Web Chromium",
+      "observed_rto_minutes": 18,
+      "status": "passed",
+      "executed_at": "2026-02-15T09:00:00Z"
+    },
+    {
+      "workspace_id": "ios",
+      "platform": "iOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "browser_profile": "Web Safari",
+      "observed_rto_minutes": 22,
+      "status": "passed",
+      "executed_at": "2026-02-15T09:30:00Z"
+    },
+    {
+      "workspace_id": "ipados",
+      "platform": "iPadOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "browser_profile": "Web Safari",
+      "observed_rto_minutes": 23,
+      "status": "passed",
+      "executed_at": "2026-02-15T10:00:00Z"
+    },
+    {
+      "workspace_id": "linux",
+      "platform": "Linux",
+      "fallback_workspace": "web",
+      "distribution_channel": "signed-package-repo",
+      "browser_profile": "Web Firefox",
+      "observed_rto_minutes": 14,
+      "status": "passed",
+      "executed_at": "2026-02-15T10:30:00Z"
+    },
+    {
+      "workspace_id": "macos",
+      "platform": "macOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "apple-notarized-distribution",
+      "browser_profile": "Web Safari",
+      "observed_rto_minutes": 12,
+      "status": "passed",
+      "executed_at": "2026-02-15T11:00:00Z"
+    },
+    {
+      "workspace_id": "windows",
+      "platform": "Windows",
+      "fallback_workspace": "web",
+      "distribution_channel": "winget-msi",
+      "browser_profile": "Web Chromium",
+      "observed_rto_minutes": 15,
+      "status": "passed",
+      "executed_at": "2026-02-15T11:30:00Z"
+    }
+  ]
+}

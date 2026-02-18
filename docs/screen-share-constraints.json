@@ -1,0 +1,124 @@
+{
+  "schema": "kaigi-screen-share-constraints/v1",
+  "frozen_at": "2026-02-15",
+  "constraints": [
+    {
+      "platform": "WebChromium",
+      "capture_targets": [
+        "display",
+        "window",
+        "browser_tab"
+      ],
+      "system_audio_modes": [
+        "tab",
+        "system_loopback"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "Browser picker + user gesture are mandatory for every share start."
+    },
+    {
+      "platform": "WebSafari",
+      "capture_targets": [
+        "display",
+        "window"
+      ],
+      "system_audio_modes": [
+        "none"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "Tab-specific capture is unavailable; treat system audio as unsupported."
+    },
+    {
+      "platform": "WebFirefox",
+      "capture_targets": [
+        "display",
+        "window",
+        "browser_tab"
+      ],
+      "system_audio_modes": [
+        "tab"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "Browser tab capture is supported; full-system loopback is not required."
+    },
+    {
+      "platform": "MacOS",
+      "capture_targets": [
+        "display",
+        "window"
+      ],
+      "system_audio_modes": [
+        "system_loopback"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "Screen Recording permission and runtime picker confirmation are required."
+    },
+    {
+      "platform": "IOS",
+      "capture_targets": [
+        "display"
+      ],
+      "system_audio_modes": [
+        "none"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "ReplayKit broadcast extension path; no window/tab source model."
+    },
+    {
+      "platform": "IPadOS",
+      "capture_targets": [
+        "display"
+      ],
+      "system_audio_modes": [
+        "none"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "ReplayKit broadcast extension path; no window/tab source model."
+    },
+    {
+      "platform": "Windows",
+      "capture_targets": [
+        "display",
+        "window"
+      ],
+      "system_audio_modes": [
+        "system_loopback"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "Desktop Duplication and window capture are supported with explicit user pick."
+    },
+    {
+      "platform": "Android",
+      "capture_targets": [
+        "display",
+        "window"
+      ],
+      "system_audio_modes": [
+        "system_loopback"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "MediaProjection permission dialog required at each share start."
+    },
+    {
+      "platform": "Linux",
+      "capture_targets": [
+        "display",
+        "window"
+      ],
+      "system_audio_modes": [
+        "system_loopback"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "PipeWire portal selection is required for compositor-specific capture."
+    }
+  ]
+}

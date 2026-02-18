@@ -1,0 +1,742 @@
+name: Conformance Matrix
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - roadmap.md
+      - clients/**
+      - docs/**
+      - scripts/**
+      - .github/workflows/conformance-matrix.yml
+  push:
+    branches:
+      - master
+    paths:
+      - roadmap.md
+      - clients/**
+      - docs/**
+      - scripts/**
+      - .github/workflows/conformance-matrix.yml
+
+jobs:
+  validate-doc-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required roadmap docs exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            "docs/av-baseline-profiles.json"
+            "docs/critical-defects.json"
+            "docs/ga-approvals.json"
+            "docs/hardening-gates.json"
+            "docs/hdr-transport-profiles.json"
+            "docs/hdr-target-device-results.json"
+            "docs/parity-status-contract.json"
+            "docs/parity-status-waivers.json"
+            "docs/parity-waiver-policy.json"
+            "docs/client-app-workspaces.json"
+            "docs/client-release-tracks.json"
+            "docs/client-fallback-drills.json"
+            "docs/client-fallback-drill-results.json"
+            "docs/client-release-manifest.json"
+            "docs/client-release-readiness-gates.json"
+            "docs/client-rollback-manifest.json"
+            "docs/fixtures/waivers/manifest.json"
+            "docs/platform-blockers.json"
+            "roadmap.md"
+            "docs/media-capability-profiles.json"
+            "docs/parity-matrix.md"
+            "docs/platform-contract.json"
+            "docs/protocol-vnext.md"
+            "docs/release-playbook.md"
+            "docs/rollback-playbook.md"
+            "docs/screen-share-constraints.json"
+            "docs/test-plan.md"
+          )
+          for file in "${required[@]}"; do
+            [[ -f "$file" ]] || { echo "Missing required file: $file"; exit 1; }
+          done
+      - name: Validate workflow matrix sync with docs contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_ci_contract_sync.py
+      - name: Validate required sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq "^## Milestones and Exit Criteria" roadmap.md
+          grep -Eq "^## Core Meeting Capability Matrix" docs/parity-matrix.md
+          grep -Fq "Frozen on 2026-02-15" docs/parity-matrix.md
+          grep -Eq "^## New Control Frames \(Frozen\)" docs/protocol-vnext.md
+          grep -Eq "^## Join Link Schema .* \(Frozen\)" docs/protocol-vnext.md
+          grep -Eq "^## Frozen Role/Permission Model" docs/protocol-vnext.md
+          grep -Fq "Frozen on 2026-02-15" docs/protocol-vnext.md
+          grep -Eq "^## Suite A: Protocol Conformance" docs/test-plan.md
+          grep -Fq "Frozen on 2026-02-15" docs/test-plan.md
+          grep -Eq "^# Release Playbook" docs/release-playbook.md
+          grep -Eq "^## Native Release Tracks" docs/release-playbook.md
+          grep -Eq "^## IPFS Web Release" docs/release-playbook.md
+          grep -Eq "^# Rollback Playbook" docs/rollback-playbook.md
+          grep -Eq "^## Native Rollback Tracks" docs/rollback-playbook.md
+          grep -Eq "^## IPFS Web Rollback" docs/rollback-playbook.md
+          grep -Fq '"schema": "kaigi-av-baseline-profiles/v1"' docs/av-baseline-profiles.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/av-baseline-profiles.json
+          grep -Fq '"schema": "kaigi-hdr-transport-profiles/v1"' docs/hdr-transport-profiles.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/hdr-transport-profiles.json
+          grep -Fq '"schema": "kaigi-hdr-target-device-results/v1"' docs/hdr-target-device-results.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/hdr-target-device-results.json
+          grep -Fq '"schema": "kaigi-parity-status-contract/v1"' docs/parity-status-contract.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/parity-status-contract.json
+          grep -Fq '"schema": "kaigi-parity-status-waivers/v1"' docs/parity-status-waivers.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/parity-status-waivers.json
+          grep -Fq '"schema": "kaigi-parity-waiver-policy/v1"' docs/parity-waiver-policy.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/parity-waiver-policy.json
+          grep -Fq '"schema": "kaigi-client-app-workspaces/v1"' docs/client-app-workspaces.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-app-workspaces.json
+          grep -Fq '"schema": "kaigi-client-release-tracks/v1"' docs/client-release-tracks.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-release-tracks.json
+          grep -Fq '"schema": "kaigi-client-fallback-drills/v1"' docs/client-fallback-drills.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-fallback-drills.json
+          grep -Fq '"schema": "kaigi-client-fallback-drill-results/v1"' docs/client-fallback-drill-results.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-fallback-drill-results.json
+          grep -Fq '"schema": "kaigi-client-release-manifest/v1"' docs/client-release-manifest.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-release-manifest.json
+          grep -Fq '"schema": "kaigi-client-release-readiness-gates/v1"' docs/client-release-readiness-gates.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-release-readiness-gates.json
+          grep -Fq '"schema": "kaigi-client-rollback-manifest/v1"' docs/client-rollback-manifest.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/client-rollback-manifest.json
+          grep -Fq '"schema": "kaigi-parity-waiver-fixture-manifest/v1"' docs/fixtures/waivers/manifest.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/fixtures/waivers/manifest.json
+          grep -Fq '"schema": "kaigi-hardening-gates/v1"' docs/hardening-gates.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/hardening-gates.json
+          grep -Fq '"schema": "kaigi-ga-approvals/v1"' docs/ga-approvals.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/ga-approvals.json
+          grep -Fq '"schema": "kaigi-platform-blockers/v1"' docs/platform-blockers.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/platform-blockers.json
+          grep -Fq '"schema": "kaigi-critical-defects/v1"' docs/critical-defects.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/critical-defects.json
+          grep -Fq '"schema": "kaigi-screen-share-constraints/v1"' docs/screen-share-constraints.json
+          grep -Fq '"frozen_at": "2026-02-15"' docs/screen-share-constraints.json
+      - name: Validate frozen platform contract artifact schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+
+          with open("docs/platform-contract.json", "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          assert payload.get("schema") == "kaigi-platform-contract/v1"
+          assert payload.get("frozen_at") == "2026-02-15"
+          contracts = payload.get("contracts")
+          assert isinstance(contracts, list) and len(contracts) == 9
+          platforms = {contract.get("platform") for contract in contracts}
+          assert len(platforms) == 9
+          required = {
+              "WebChromium", "WebSafari", "WebFirefox",
+              "MacOS", "IOS", "IPadOS", "Windows", "Android", "Linux",
+          }
+          assert platforms == required
+          PY
+      - name: Validate frozen media capability profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_media_capability_profiles.py
+      - name: Validate frozen A/V baseline profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_av_baseline_profiles.py
+      - name: Validate frozen HDR transport profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_hdr_transport_profiles.py
+      - name: Validate HDR target-device run results
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_hdr_target_device_results.py
+      - name: Validate platform blocker ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_platform_blockers.py
+      - name: Validate client app workspaces contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_app_workspaces.py
+      - name: Validate client release tracks contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_release_tracks.py
+      - name: Validate client release playbook alignment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_release_playbook_alignment.py
+      - name: Validate client fallback drills contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_fallback_drills.py
+      - name: Validate client fallback drill results contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_fallback_drill_results.py
+      - name: Validate client release manifest contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_release_manifest.py
+      - name: Validate client release readiness gates contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_release_readiness_gates.py
+      - name: Validate client rollback manifest contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_client_rollback_manifest.py
+      - name: Validate parity status contract sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_parity_status_contract.py
+      - name: Validate parity downgrade guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_parity_downgrade_guard.py
+      - name: Validate parity waiver policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_parity_waiver_policy.py
+      - name: Validate parity waiver fixture manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_parity_waiver_fixture_manifest.py
+      - name: Validate parity waiver fixture control coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_parity_waiver_fixture_coverage.py
+      - name: Validate hardening gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_hardening_gates.py
+      - name: Validate GA approvals
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_ga_approvals.py
+      - name: Validate frozen screen-share constraints
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_screen_share_constraints.py
+      - name: Validate release and rollback playbooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_release_playbooks.py
+      - name: Validate zero critical-defect ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_critical_defects.py
+
+  run-rust-conformance-tests:
+    needs: validate-doc-contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Run conformance crate tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p kaigi-wire -p kaigi-hub-echo -p kaigi-cli -p kaigi-platform-contract
+      - name: Verify frozen platform contract artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/export_platform_contract_json.sh target/conformance/platform-contract.generated.json
+          diff -u docs/platform-contract.json target/conformance/platform-contract.generated.json
+      - name: Run conformance evidence bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_conformance_evidence_bundle.sh
+      - name: Upload SCALE-004 soak evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: scale004-soak-evidence
+          path: |
+            target/conformance/scale004-soak-report.json
+            target/conformance/scale004-soak.log
+          if-no-files-found: error
+      - name: Upload security/protocol smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-protocol-smoke-evidence
+          path: |
+            target/conformance/security-protocol-smoke-report.json
+            target/conformance/security-protocol-smoke.log
+          if-no-files-found: error
+      - name: Upload media/HDR/recording smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-hdr-recording-smoke-evidence
+          path: |
+            target/conformance/media-hdr-recording-smoke-report.json
+            target/conformance/media-hdr-recording-smoke.log
+          if-no-files-found: error
+      - name: Upload HDR transport smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hdr-transport-smoke-evidence
+          path: |
+            target/conformance/hdr-transport-smoke-report.json
+            target/conformance/hdr-transport-smoke.log
+          if-no-files-found: error
+      - name: Upload M2 exit-criteria smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2-exit-criteria-smoke-evidence
+          path: |
+            target/conformance/m2-exit-criteria-smoke-report.json
+            target/conformance/m2-exit-criteria-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-status smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-status-smoke-evidence
+          path: |
+            target/conformance/parity-status-smoke-report.json
+            target/conformance/parity-status-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-readiness smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-readiness-smoke-evidence
+          path: |
+            target/conformance/parity-readiness-smoke-report.json
+            target/conformance/parity-readiness-smoke.log
+            target/conformance/parity-readiness-report.json
+            target/conformance/parity-readiness.log
+          if-no-files-found: error
+      - name: Upload parity-GA smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-ga-smoke-evidence
+          path: |
+            target/conformance/parity-ga-smoke-report.json
+            target/conformance/parity-ga-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-downgrade-guard smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-downgrade-guard-smoke-evidence
+          path: |
+            target/conformance/parity-downgrade-guard-smoke-report.json
+            target/conformance/parity-downgrade-guard-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-waiver-policy smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-waiver-policy-smoke-evidence
+          path: |
+            target/conformance/parity-waiver-policy-smoke-report.json
+            target/conformance/parity-waiver-policy-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-waiver-fixture-manifest smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-waiver-fixture-manifest-smoke-evidence
+          path: |
+            target/conformance/parity-waiver-fixture-manifest-smoke-report.json
+            target/conformance/parity-waiver-fixture-manifest-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-waiver-fixture-coverage smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-waiver-fixture-coverage-smoke-evidence
+          path: |
+            target/conformance/parity-waiver-fixture-coverage-smoke-report.json
+            target/conformance/parity-waiver-fixture-coverage-smoke.log
+          if-no-files-found: error
+      - name: Upload parity-waiver-policy negative smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-waiver-policy-negative-smoke-evidence
+          path: |
+            target/conformance/parity-waiver-policy-negative-smoke-report.json
+            target/conformance/parity-waiver-policy-negative-smoke.log
+          if-no-files-found: error
+      - name: Upload M3 exit-criteria smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-exit-criteria-smoke-evidence
+          path: |
+            target/conformance/m3-exit-criteria-smoke-report.json
+            target/conformance/m3-exit-criteria-smoke.log
+          if-no-files-found: error
+      - name: Upload A/V baseline smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: av-baseline-smoke-evidence
+          path: |
+            target/conformance/av-baseline-smoke-report.json
+            target/conformance/av-baseline-smoke.log
+          if-no-files-found: error
+      - name: Upload screen-share constraints smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-share-constraints-smoke-evidence
+          path: |
+            target/conformance/screen-share-constraints-smoke-report.json
+            target/conformance/screen-share-constraints-smoke.log
+          if-no-files-found: error
+      - name: Upload control-plane reliability smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlplane-reliability-smoke-evidence
+          path: |
+            target/conformance/controlplane-reliability-smoke-report.json
+            target/conformance/controlplane-reliability-smoke.log
+          if-no-files-found: error
+      - name: Upload release-playbook smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-playbook-smoke-evidence
+          path: |
+            target/conformance/release-playbook-smoke-report.json
+            target/conformance/release-playbook-smoke.log
+          if-no-files-found: error
+      - name: Upload release-readiness smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-smoke-evidence
+          path: |
+            target/conformance/release-readiness-smoke-report.json
+            target/conformance/release-readiness-smoke.log
+            target/conformance/release-readiness-report.json
+            target/conformance/release-readiness.log
+          if-no-files-found: error
+      - name: Upload hardening/GA smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardening-ga-smoke-evidence
+          path: |
+            target/conformance/hardening-ga-smoke-report.json
+            target/conformance/hardening-ga-smoke.log
+          if-no-files-found: error
+      - name: Upload platform-contract smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-contract-smoke-evidence
+          path: |
+            target/conformance/platform-contract-smoke-report.json
+            target/conformance/platform-contract-smoke.log
+          if-no-files-found: error
+      - name: Upload client-app-workspaces smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-app-workspaces-smoke-evidence
+          path: |
+            target/conformance/client-app-workspaces-smoke-report.json
+            target/conformance/client-app-workspaces-smoke.log
+          if-no-files-found: error
+      - name: Upload client-release-tracks smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-release-tracks-smoke-evidence
+          path: |
+            target/conformance/client-release-tracks-smoke-report.json
+            target/conformance/client-release-tracks-smoke.log
+          if-no-files-found: error
+      - name: Upload client-release-playbook-alignment smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-release-playbook-alignment-smoke-evidence
+          path: |
+            target/conformance/client-release-playbook-alignment-smoke-report.json
+            target/conformance/client-release-playbook-alignment-smoke.log
+          if-no-files-found: error
+      - name: Upload client-fallback-drills smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-fallback-drills-smoke-evidence
+          path: |
+            target/conformance/client-fallback-drills-smoke-report.json
+            target/conformance/client-fallback-drills-smoke.log
+          if-no-files-found: error
+      - name: Upload client-fallback-drill-results smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-fallback-drill-results-smoke-evidence
+          path: |
+            target/conformance/client-fallback-drill-results-smoke-report.json
+            target/conformance/client-fallback-drill-results-smoke.log
+          if-no-files-found: error
+      - name: Upload client-release-manifest smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-release-manifest-smoke-evidence
+          path: |
+            target/conformance/client-release-manifest-smoke-report.json
+            target/conformance/client-release-manifest-smoke.log
+          if-no-files-found: error
+      - name: Upload client-release-readiness-gates smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-release-readiness-gates-smoke-evidence
+          path: |
+            target/conformance/client-release-readiness-gates-smoke-report.json
+            target/conformance/client-release-readiness-gates-smoke.log
+          if-no-files-found: error
+      - name: Upload client-rollback-manifest smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-rollback-manifest-smoke-evidence
+          path: |
+            target/conformance/client-rollback-manifest-smoke-report.json
+            target/conformance/client-rollback-manifest-smoke.log
+          if-no-files-found: error
+      - name: Upload conformance coverage evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-coverage-evidence
+          path: |
+            target/conformance/conformance-coverage-report.json
+            target/conformance/conformance-coverage.log
+          if-no-files-found: error
+      - name: Upload conformance evidence index artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-evidence-index
+          path: |
+            target/conformance/conformance-evidence-index-report.json
+            target/conformance/conformance-evidence-index.md
+            target/conformance/conformance-evidence-index.log
+          if-no-files-found: error
+      - name: Upload conformance evidence bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-evidence-bundle
+          path: |
+            target/conformance/conformance-evidence-bundle-report.json
+            target/conformance/conformance-evidence-bundle.log
+          if-no-files-found: error
+
+  protocol-contract-matrix:
+    needs: validate-doc-contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        frame:
+          - ModerationSigned
+          - RoleGrant
+          - RoleRevoke
+          - PermissionsSnapshot
+          - SessionPolicy
+          - DeviceCapability
+          - MediaProfileNegotiation
+          - RecordingNotice
+          - E2EEKeyEpoch
+          - KeyRotationAck
+          - ParticipantPresenceDelta
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure protocol frame is documented
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq "\\b${{ matrix.frame }}\\b" docs/protocol-vnext.md
+
+  join-link-contract-matrix:
+    needs: validate-doc-contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        param:
+          - "`v`"
+          - "`channel`"
+          - "`exp`"
+          - "`nonce`"
+          - "`sig`"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure join-link security params are documented
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "${{ matrix.param }}" docs/protocol-vnext.md
+
+  platform-parity-matrix:
+    needs: validate-doc-contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - Web Chromium
+          - Web Safari
+          - Web Firefox
+          - macOS
+          - iOS
+          - iPadOS
+          - Windows
+          - Android
+          - Linux
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure platform is present in parity matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq "\\|[[:space:]]*${{ matrix.platform }}[[:space:]]*\\|" docs/parity-matrix.md
+
+  scenario-contract-matrix:
+    needs: validate-doc-contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - P-CONF-001
+          - P-CONF-002
+          - P-CONF-003
+          - P-CONF-004
+          - SEC-001
+          - SEC-002
+          - SEC-003
+          - SEC-004
+          - MOD-001
+          - MOD-002
+          - MOD-003
+          - MOD-004
+          - MOD-005
+          - MOD-006
+          - MEDIA-001
+          - MEDIA-002
+          - MEDIA-003
+          - MEDIA-004
+          - HDR-001
+          - HDR-002
+          - HDR-003
+          - HDR-004
+          - HDR-005
+          - PARITY-001
+          - PARITY-002
+          - PARITY-003
+          - PARITY-004
+          - PARITY-005
+          - PARITY-006
+          - PARITY-007
+          - PARITY-008
+          - PARITY-009
+          - REC-001
+          - REC-002
+          - REC-003
+          - PLATFORM-001
+          - PLATFORM-002
+          - PLATFORM-003
+          - PLATFORM-004
+          - PLATFORM-005
+          - PLATFORM-006
+          - PLATFORM-007
+          - PLATFORM-008
+          - PLATFORM-009
+          - PLATFORM-010
+          - PLATFORM-011
+          - PLATFORM-012
+          - PLATFORM-013
+          - PLATFORM-014
+          - SCALE-001
+          - SCALE-002
+          - SCALE-003
+          - SCALE-004
+          - OPS-001
+          - OPS-002
+          - OPS-003
+          - OPS-004
+          - OPS-005
+          - OPS-006
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure mandatory scenario ID exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq "${{ matrix.scenario }}" docs/test-plan.md
+
+  conformance-summary:
+    needs:
+      - run-rust-conformance-tests
+      - protocol-contract-matrix
+      - join-link-contract-matrix
+      - platform-parity-matrix
+      - scenario-contract-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish summary
+        run: |
+          {
+            echo "## Conformance Contract Summary"
+            echo "- Protocol frame contract matrix: passed"
+            echo "- Platform parity matrix contract: passed"
+            echo "- Scenario contract matrix: passed"
+            echo "- SCALE-004 soak evidence artifact: uploaded"
+            echo "- Security/protocol smoke evidence artifact: uploaded"
+            echo "- Media/HDR/recording smoke evidence artifact: uploaded"
+            echo "- HDR transport smoke evidence artifact: uploaded"
+            echo "- M2 exit-criteria smoke evidence artifact: uploaded"
+            echo "- Parity-status smoke evidence artifact: uploaded"
+            echo "- Parity-readiness smoke evidence artifact: uploaded"
+            echo "- Parity-GA smoke evidence artifact: uploaded"
+            echo "- Parity-downgrade-guard smoke evidence artifact: uploaded"
+            echo "- Parity-waiver-policy smoke evidence artifact: uploaded"
+            echo "- Parity-waiver-fixture-manifest smoke evidence artifact: uploaded"
+            echo "- Parity-waiver-fixture-coverage smoke evidence artifact: uploaded"
+            echo "- Parity-waiver-policy negative smoke evidence artifact: uploaded"
+            echo "- M3 exit-criteria smoke evidence artifact: uploaded"
+            echo "- A/V baseline smoke evidence artifact: uploaded"
+            echo "- Screen-share constraints smoke evidence artifact: uploaded"
+            echo "- Control-plane reliability smoke evidence artifact: uploaded"
+            echo "- Release-playbook smoke evidence artifact: uploaded"
+            echo "- Release-readiness smoke evidence artifact: uploaded"
+            echo "- Hardening/GA smoke evidence artifact: uploaded"
+            echo "- Platform-contract smoke evidence artifact: uploaded"
+            echo "- Client-app-workspaces smoke evidence artifact: uploaded"
+            echo "- Client-release-tracks smoke evidence artifact: uploaded"
+            echo "- Client-release-playbook-alignment smoke evidence artifact: uploaded"
+            echo "- Client-fallback-drills smoke evidence artifact: uploaded"
+            echo "- Client-fallback-drill-results smoke evidence artifact: uploaded"
+            echo "- Client-release-manifest smoke evidence artifact: uploaded"
+            echo "- Client-release-readiness-gates smoke evidence artifact: uploaded"
+            echo "- Client-rollback-manifest smoke evidence artifact: uploaded"
+            echo "- Conformance coverage evidence artifact: uploaded"
+            echo "- Conformance evidence index artifact: uploaded"
+            echo "- Conformance evidence bundle artifact: uploaded"
+          } >> "$GITHUB_STEP_SUMMARY"

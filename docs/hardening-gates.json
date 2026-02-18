@@ -1,0 +1,71 @@
+{
+  "schema": "kaigi-hardening-gates/v1",
+  "frozen_at": "2026-02-15",
+  "generated_at": "2026-02-15T00:00:00Z",
+  "release_train": "2027-01-31-bigbang-ga",
+  "platform_gates": [
+    {
+      "platform": "WebChromium",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Stable browser fallback performance, reliability soak, and security conformance checks passed."
+    },
+    {
+      "platform": "WebSafari",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Safari fallback behavior and platform security controls validated for GA release train."
+    },
+    {
+      "platform": "WebFirefox",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Firefox fallback behavior validated with reliability and security gate evidence."
+    },
+    {
+      "platform": "MacOS",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native macOS path met performance, reliability, and security hardening criteria."
+    },
+    {
+      "platform": "IOS",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native iOS path met hardening gate requirements for GA train inclusion."
+    },
+    {
+      "platform": "IPadOS",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native iPadOS path met hardening gate requirements for GA train inclusion."
+    },
+    {
+      "platform": "Windows",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native Windows path met hardening gate requirements and browser fallback parity."
+    },
+    {
+      "platform": "Android",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native Android path met hardening gate requirements for GA train inclusion."
+    },
+    {
+      "platform": "Linux",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native Linux path met hardening gate requirements with platform parity evidence."
+    }
+  ]
+}

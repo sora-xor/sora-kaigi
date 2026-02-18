@@ -2,6 +2,7 @@
 members = [
   "crates/kaigi-cli",
   "crates/kaigi-hub-echo",
+  "crates/kaigi-platform-contract",
   "crates/kaigi-soranet-client",
   "crates/kaigi-wire",
 ]

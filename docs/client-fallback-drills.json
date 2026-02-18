@@ -1,0 +1,72 @@
+{
+  "schema": "kaigi-client-fallback-drills/v1",
+  "frozen_at": "2026-02-15",
+  "drills": [
+    {
+      "workspace_id": "android",
+      "platform": "Android",
+      "fallback_workspace": "web",
+      "distribution_channel": "google-play",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 30,
+      "validation_command": "npm run test:web-smoke -- --browser=chromium",
+      "cadence": "every-release-train",
+      "owner": "android-client-oncall"
+    },
+    {
+      "workspace_id": "ios",
+      "platform": "iOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 30,
+      "validation_command": "npm run test:web-smoke -- --browser=safari",
+      "cadence": "every-release-train",
+      "owner": "ios-client-oncall"
+    },
+    {
+      "workspace_id": "ipados",
+      "platform": "iPadOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 30,
+      "validation_command": "npm run test:web-smoke -- --browser=safari",
+      "cadence": "every-release-train",
+      "owner": "ipados-client-oncall"
+    },
+    {
+      "workspace_id": "linux",
+      "platform": "Linux",
+      "fallback_workspace": "web",
+      "distribution_channel": "signed-package-repo",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 20,
+      "validation_command": "npm run test:web-smoke -- --browser=firefox",
+      "cadence": "every-release-train",
+      "owner": "linux-client-oncall"
+    },
+    {
+      "workspace_id": "macos",
+      "platform": "macOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "apple-notarized-distribution",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 20,
+      "validation_command": "npm run test:web-smoke -- --browser=safari",
+      "cadence": "every-release-train",
+      "owner": "macos-client-oncall"
+    },
+    {
+      "workspace_id": "windows",
+      "platform": "Windows",
+      "fallback_workspace": "web",
+      "distribution_channel": "winget-msi",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 20,
+      "validation_command": "npm run test:web-smoke -- --browser=chromium",
+      "cadence": "every-release-train",
+      "owner": "windows-client-oncall"
+    }
+  ]
+}

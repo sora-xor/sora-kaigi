@@ -5,6 +5,7 @@ use std::{
     sync::{
         Arc,
         atomic::{AtomicU8, AtomicU64, Ordering},
+        Mutex as StdMutex, OnceLock,
     },
 };
 
@@ -18,16 +19,20 @@ use chacha20poly1305::{
     aead::{Aead as _, Payload},
 };
 use clap::{Parser, Subcommand};
+use kaigi_platform_contract::{all_platform_contracts, platform_contract, TargetPlatform};
 use kaigi_soranet_client::{
     HandshakeParams, RelayConnectOptions, connect_and_handshake, decode_hex_32, decode_hex_vec,
     derive_kaigi_room_id, fetch_handshake_params_from_torii, open_kaigi_stream,
 };
 use kaigi_wire::{
-    AnonHelloFrame, AnonRosterFrame, ChatFrame, EncryptedControlFrame, EncryptedControlKind,
-    EncryptedRecipientPayload, EscrowProofFrame, FrameDecoder, GroupKeyUpdateFrame, HelloFrame,
-    KaigiFrame, MAX_ANON_PARTICIPANT_HANDLE_LEN, MAX_ESCROW_ID_LEN, MAX_ESCROW_PROOF_HEX_LEN,
-    ModerationAction, ModerationFrame, ModerationTarget, PROTOCOL_VERSION, ParticipantStateFrame,
-    PaymentFrame, PingFrame, RoomConfigUpdateFrame, encode_framed,
+    AnonHelloFrame, AnonRosterFrame, ChatFrame, DeviceCapabilityFrame, E2EEKeyEpochFrame,
+    EncryptedControlFrame, EncryptedControlKind, EncryptedRecipientPayload, EscrowProofFrame,
+    FrameDecoder, GroupKeyUpdateFrame, HelloFrame, KaigiFrame, KeyRotationAckFrame,
+    MAX_ANON_PARTICIPANT_HANDLE_LEN, MAX_ESCROW_ID_LEN, MAX_ESCROW_PROOF_HEX_LEN,
+    MediaProfileKind, MediaProfileNegotiationFrame, ModerationAction, ModerationSignedFrame,
+    ModerationTarget, PROTOCOL_VERSION, ParticipantStateFrame, PaymentFrame,
+    PermissionsSnapshotFrame, PingFrame, RecordingNoticeFrame, RecordingState, RoleGrantFrame,
+    RoleKind, RoleRevokeFrame, RoomConfigUpdateFrame, SessionPolicyFrame, encode_framed,
 };
 use norito::{
     streaming::{
@@ -82,6 +87,9 @@ enum Command {
 
     /// Decode and inspect a Kaigi join link.
     DecodeJoinLink(DecodeJoinLinkArgs),
+
+    /// Print the frozen platform/browser parity contract as JSON.
+    PlatformContract(PlatformContractArgs),
 
     /// Submit Kaigi lifecycle instructions via the upstream `iroha` CLI.
     KaigiLifecycle(KaigiLifecycleArgs),
@@ -488,6 +496,14 @@ struct MakeJoinLinkArgs {
     #[arg(long)]
     kaigi_privacy_mode: Option<String>,
 
+    /// Expiration window in seconds for signed join links (`v=2`).
+    #[arg(long, default_value_t = DEFAULT_JOIN_LINK_EXPIRES_IN_SECS)]
+    expires_in_secs: u64,
+
+    /// Emit legacy unsigned link format (`v=1`) for backward compatibility.
+    #[arg(long)]
+    legacy_v1: bool,
+
     /// Allow generating a join link without Torii routing metadata (local dev harness only).
     #[arg(long)]
     allow_local_handshake: bool,
@@ -498,6 +514,20 @@ struct DecodeJoinLinkArgs {
     /// Join link to decode.
     #[arg(long)]
     link: String,
+}
+
+#[derive(Parser, Debug)]
+struct PlatformContractArgs {
+    /// Optional target platform selector.
+    ///
+    /// Allowed values: web-chromium, web-safari, web-firefox, macos, ios, ipados,
+    /// windows, android, linux.
+    #[arg(long)]
+    platform: Option<String>,
+
+    /// Print human-readable JSON.
+    #[arg(long)]
+    pretty: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -649,6 +679,14 @@ struct WriteRouteUpdateArgs {
     #[arg(long)]
     kaigi_privacy_mode: Option<String>,
 
+    /// Expiration window in seconds for generated join links (`v=2`).
+    #[arg(long, default_value_t = DEFAULT_JOIN_LINK_EXPIRES_IN_SECS)]
+    join_link_expires_in_secs: u64,
+
+    /// Emit legacy unsigned join link format (`v=1`) for backward compatibility.
+    #[arg(long)]
+    join_link_legacy_v1: bool,
+
     /// Allow generating join links without Torii metadata (local dev harness only).
     #[arg(long)]
     allow_local_handshake: bool,
@@ -687,6 +725,7 @@ struct ListRoutesArgs {
 
 #[derive(Clone, Debug)]
 struct JoinLinkPayload {
+    version: u8,
     relay: SocketAddr,
     channel: [u8; 32],
     authenticated: bool,
@@ -697,6 +736,9 @@ struct JoinLinkPayload {
     kaigi_domain: Option<String>,
     kaigi_call_name: Option<String>,
     kaigi_privacy_mode: Option<String>,
+    expires_at_ms: Option<u64>,
+    nonce_hex: Option<String>,
+    signature_hex: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -725,6 +767,40 @@ const HOST_STATE_UNKNOWN: u8 = 0;
 const HOST_STATE_SELF: u8 = 1;
 const HOST_STATE_OTHER: u8 = 2;
 const MAX_ANON_UNSHIELD_INPUTS: usize = 256;
+const DEFAULT_POLICY_MAX_PARTICIPANTS: u32 = 500;
+const JOIN_LINK_VERSION_LEGACY: u8 = 1;
+const JOIN_LINK_VERSION_SIGNED: u8 = 2;
+const JOIN_LINK_NONCE_BYTES: usize = 16;
+const DEFAULT_JOIN_LINK_EXPIRES_IN_SECS: u64 = 3600;
+const MAX_JOIN_LINK_EXPIRES_IN_SECS: u64 = 7 * 24 * 3600;
+const MAX_JOIN_LINK_NONCE_CACHE_ENTRIES: usize = 4096;
+
+static SEEN_JOIN_LINK_NONCES: OnceLock<StdMutex<HashMap<String, u64>>> = OnceLock::new();
+
+#[derive(Clone, Debug)]
+struct LocalSessionPolicyState {
+    room_lock: bool,
+    waiting_room_enabled: bool,
+    guest_join_allowed: bool,
+    local_recording_allowed: bool,
+    e2ee_required: bool,
+    max_participants: u32,
+    policy_epoch: u64,
+}
+
+impl Default for LocalSessionPolicyState {
+    fn default() -> Self {
+        Self {
+            room_lock: false,
+            waiting_room_enabled: false,
+            guest_join_allowed: true,
+            local_recording_allowed: true,
+            e2ee_required: true,
+            max_participants: DEFAULT_POLICY_MAX_PARTICIPANTS,
+            policy_epoch: 0,
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -751,6 +827,9 @@ async fn main() -> Result<()> {
         Command::DecodeJoinLink(args) => {
             decode_join_link(args)?;
         }
+        Command::PlatformContract(args) => {
+            print_platform_contract(args)?;
+        }
         Command::KaigiLifecycle(args) => {
             kaigi_lifecycle(args)?;
         }
@@ -772,7 +851,12 @@ fn make_join_link(args: MakeJoinLinkArgs) -> Result<()> {
         args.kaigi_call_name.as_deref(),
     )?;
     validate_privacy_mode_arg(args.kaigi_privacy_mode.as_deref())?;
-    let payload = JoinLinkPayload {
+    let mut payload = JoinLinkPayload {
+        version: if args.legacy_v1 {
+            JOIN_LINK_VERSION_LEGACY
+        } else {
+            JOIN_LINK_VERSION_SIGNED
+        },
         relay: args.relay,
         channel: decode_hex_32(&args.channel)?,
         authenticated: args.authenticated,
@@ -783,13 +867,20 @@ fn make_join_link(args: MakeJoinLinkArgs) -> Result<()> {
         kaigi_domain: args.kaigi_domain,
         kaigi_call_name: args.kaigi_call_name,
         kaigi_privacy_mode: normalize_privacy_mode(args.kaigi_privacy_mode),
+        expires_at_ms: None,
+        nonce_hex: None,
+        signature_hex: None,
     };
+    if payload.version == JOIN_LINK_VERSION_SIGNED {
+        populate_join_link_security_fields(&mut payload, args.expires_in_secs)?;
+    }
     println!("{}", render_join_link(&payload));
     Ok(())
 }
 
 fn decode_join_link(args: DecodeJoinLinkArgs) -> Result<()> {
-    let payload = parse_join_link(&args.link)?;
+    let payload = parse_join_link_for_inspection(&args.link)?;
+    println!("version={}", payload.version);
     println!("relay={}", payload.relay);
     println!("channel_id_hex={}", hex::encode(payload.channel));
     println!("authenticated={}", payload.authenticated);
@@ -812,8 +903,68 @@ fn decode_join_link(args: DecodeJoinLinkArgs) -> Result<()> {
         "kaigi_privacy_mode={}",
         payload.kaigi_privacy_mode.as_deref().unwrap_or("<none>")
     );
+    println!(
+        "expires_at_ms={}",
+        payload
+            .expires_at_ms
+            .map(|value| value.to_string())
+            .as_deref()
+            .unwrap_or("<none>")
+    );
+    println!(
+        "nonce_hex={}",
+        payload.nonce_hex.as_deref().unwrap_or("<none>")
+    );
+    println!(
+        "signature_hex={}",
+        payload.signature_hex.as_deref().unwrap_or("<none>")
+    );
     println!("normalized_link={}", render_join_link(&payload));
     Ok(())
+}
+
+fn print_platform_contract(args: PlatformContractArgs) -> Result<()> {
+    let payload = if let Some(requested_platform) = args.platform.as_deref() {
+        let platform = parse_target_platform(requested_platform)?;
+        serde_json::json!({
+            "schema": "kaigi-platform-contract/v1",
+            "frozen_at": "2026-02-15",
+            "contract": platform_contract(platform),
+        })
+    } else {
+        serde_json::json!({
+            "schema": "kaigi-platform-contract/v1",
+            "frozen_at": "2026-02-15",
+            "contracts": all_platform_contracts(),
+        })
+    };
+    if args.pretty {
+        println!("{}", serde_json::to_string_pretty(&payload)?);
+    } else {
+        println!("{}", serde_json::to_string(&payload)?);
+    }
+    Ok(())
+}
+
+fn parse_target_platform(raw: &str) -> Result<TargetPlatform> {
+    let normalized = raw.trim().to_ascii_lowercase().replace('_', "-");
+    let platform = match normalized.as_str() {
+        "web-chromium" | "chromium" => TargetPlatform::WebChromium,
+        "web-safari" | "safari" => TargetPlatform::WebSafari,
+        "web-firefox" | "firefox" => TargetPlatform::WebFirefox,
+        "macos" | "mac-os" => TargetPlatform::MacOS,
+        "ios" => TargetPlatform::IOS,
+        "ipados" | "ipad-os" | "ipad" => TargetPlatform::IPadOS,
+        "windows" | "win" => TargetPlatform::Windows,
+        "android" => TargetPlatform::Android,
+        "linux" => TargetPlatform::Linux,
+        _ => {
+            return Err(anyhow!(
+                "unsupported --platform value `{raw}`; expected one of web-chromium, web-safari, web-firefox, macos, ios, ipados, windows, android, linux"
+            ));
+        }
+    };
+    Ok(platform)
 }
 
 fn kaigi_lifecycle(args: KaigiLifecycleArgs) -> Result<()> {
@@ -1048,7 +1199,7 @@ fn run_iroha_json_cli(iroha_bin: &str, iroha_config: &PathBuf, args: &[String]) 
 
 fn render_join_link(payload: &JoinLinkPayload) -> String {
     let mut params: Vec<(String, String)> = vec![
-        ("v".to_string(), "1".to_string()),
+        ("v".to_string(), payload.version.to_string()),
         ("relay".to_string(), payload.relay.to_string()),
         ("channel".to_string(), hex::encode(payload.channel)),
         (
@@ -1078,6 +1229,15 @@ fn render_join_link(payload: &JoinLinkPayload) -> String {
     if let Some(mode) = payload.kaigi_privacy_mode.as_deref() {
         params.push(("kaigi_privacy_mode".to_string(), mode.to_string()));
     }
+    if let Some(expires_at_ms) = payload.expires_at_ms {
+        params.push(("exp".to_string(), expires_at_ms.to_string()));
+    }
+    if let Some(nonce_hex) = payload.nonce_hex.as_deref() {
+        params.push(("nonce".to_string(), nonce_hex.to_string()));
+    }
+    if let Some(signature_hex) = payload.signature_hex.as_deref() {
+        params.push(("sig".to_string(), signature_hex.to_string()));
+    }
 
     let encoded = params
         .into_iter()
@@ -1087,7 +1247,154 @@ fn render_join_link(payload: &JoinLinkPayload) -> String {
     format!("kaigi://join?{encoded}")
 }
 
-fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
+fn populate_join_link_security_fields(payload: &mut JoinLinkPayload, expires_in_secs: u64) -> Result<()> {
+    if payload.version != JOIN_LINK_VERSION_SIGNED {
+        return Ok(());
+    }
+    if expires_in_secs == 0 {
+        return Err(anyhow!("--expires-in-secs must be >= 1"));
+    }
+    if expires_in_secs > MAX_JOIN_LINK_EXPIRES_IN_SECS {
+        return Err(anyhow!(
+            "--expires-in-secs must be <= {}",
+            MAX_JOIN_LINK_EXPIRES_IN_SECS
+        ));
+    }
+    let expires_delta_ms = expires_in_secs
+        .checked_mul(1000)
+        .ok_or_else(|| anyhow!("--expires-in-secs overflow"))?;
+    let expires_at_ms = now_ms()
+        .checked_add(expires_delta_ms)
+        .ok_or_else(|| anyhow!("join link expiration overflow"))?;
+
+    let mut nonce = [0u8; JOIN_LINK_NONCE_BYTES];
+    rand::rng().fill_bytes(&mut nonce);
+    payload.expires_at_ms = Some(expires_at_ms);
+    payload.nonce_hex = Some(hex::encode(nonce));
+    payload.signature_hex = Some(join_link_signature_hex(payload)?);
+    Ok(())
+}
+
+fn join_link_signature_payload(payload: &JoinLinkPayload) -> Result<String> {
+    let expires_at_ms = payload
+        .expires_at_ms
+        .ok_or_else(|| anyhow!("join link v2 missing exp"))?;
+    let nonce_hex = payload
+        .nonce_hex
+        .as_deref()
+        .ok_or_else(|| anyhow!("join link v2 missing nonce"))?;
+    Ok(format!(
+        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
+        payload.version,
+        payload.relay,
+        hex::encode(payload.channel),
+        if payload.authenticated { "1" } else { "0" },
+        if payload.insecure { "1" } else { "0" },
+        payload.server_name.as_deref().unwrap_or_default(),
+        payload.torii.as_deref().unwrap_or_default(),
+        payload.pay_to.as_deref().unwrap_or_default(),
+        payload.kaigi_domain.as_deref().unwrap_or_default(),
+        payload.kaigi_call_name.as_deref().unwrap_or_default(),
+        payload.kaigi_privacy_mode.as_deref().unwrap_or_default(),
+        expires_at_ms,
+        normalize_hex_arg(nonce_hex)
+    ))
+}
+
+fn join_link_signature_hex(payload: &JoinLinkPayload) -> Result<String> {
+    let canonical = join_link_signature_payload(payload)?;
+    Ok(deterministic_signature_hex("join_link_v2", &canonical))
+}
+
+fn validate_join_link_security(payload: &JoinLinkPayload, consume_nonce_replay: bool) -> Result<()> {
+    match payload.version {
+        JOIN_LINK_VERSION_LEGACY => {
+            if payload.expires_at_ms.is_some()
+                || payload.nonce_hex.is_some()
+                || payload.signature_hex.is_some()
+            {
+                return Err(anyhow!(
+                    "join link v1 must not include exp/nonce/sig fields"
+                ));
+            }
+        }
+        JOIN_LINK_VERSION_SIGNED => {
+            let expires_at_ms = payload
+                .expires_at_ms
+                .ok_or_else(|| anyhow!("join link v2 missing exp"))?;
+            let nonce_hex = payload
+                .nonce_hex
+                .as_deref()
+                .ok_or_else(|| anyhow!("join link v2 missing nonce"))?;
+            let signature_hex = payload
+                .signature_hex
+                .as_deref()
+                .ok_or_else(|| anyhow!("join link v2 missing sig"))?;
+
+            let now = now_ms();
+            if expires_at_ms <= now {
+                return Err(anyhow!("join link expired"));
+            }
+            let max_delta_ms = MAX_JOIN_LINK_EXPIRES_IN_SECS
+                .checked_mul(1000)
+                .ok_or_else(|| anyhow!("join link max expiry overflow"))?;
+            if expires_at_ms > now.saturating_add(max_delta_ms) {
+                return Err(anyhow!(
+                    "join link exp exceeds max future window ({} seconds)",
+                    MAX_JOIN_LINK_EXPIRES_IN_SECS
+                ));
+            }
+            if strip_hex_prefix(nonce_hex).len() != JOIN_LINK_NONCE_BYTES * 2
+                || hex::decode(strip_hex_prefix(nonce_hex)).is_err()
+            {
+                return Err(anyhow!(
+                    "join link nonce must be {}-byte hex",
+                    JOIN_LINK_NONCE_BYTES
+                ));
+            }
+            if strip_hex_prefix(signature_hex).len() != 64
+                || hex::decode(strip_hex_prefix(signature_hex)).is_err()
+            {
+                return Err(anyhow!("join link sig must be 32-byte hex"));
+            }
+            let expected = join_link_signature_hex(payload)?;
+            if expected != normalize_hex_arg(signature_hex) {
+                return Err(anyhow!("join link signature verification failed"));
+            }
+            if consume_nonce_replay {
+                register_join_link_nonce_once(nonce_hex, expires_at_ms)?;
+            }
+        }
+        version => return Err(anyhow!("unsupported join link version: {version}")),
+    }
+    Ok(())
+}
+
+fn seen_join_link_nonce_cache() -> &'static StdMutex<HashMap<String, u64>> {
+    SEEN_JOIN_LINK_NONCES.get_or_init(|| StdMutex::new(HashMap::new()))
+}
+
+fn register_join_link_nonce_once(nonce_hex: &str, expires_at_ms: u64) -> Result<()> {
+    let now = now_ms();
+    let mut guard = seen_join_link_nonce_cache()
+        .lock()
+        .map_err(|_| anyhow!("join link nonce cache lock poisoned"))?;
+    guard.retain(|_, exp| *exp > now);
+    let normalized = normalize_hex_arg(nonce_hex);
+    if guard.contains_key(&normalized) {
+        return Err(anyhow!("join link replay detected"));
+    }
+    if guard.len() >= MAX_JOIN_LINK_NONCE_CACHE_ENTRIES {
+        return Err(anyhow!(
+            "join link nonce cache is full (max {}), retry after active links expire",
+            MAX_JOIN_LINK_NONCE_CACHE_ENTRIES
+        ));
+    }
+    guard.insert(normalized, expires_at_ms);
+    Ok(())
+}
+
+fn parse_join_link_with_mode(link: &str, consume_nonce_replay: bool) -> Result<JoinLinkPayload> {
     let (scheme, query) = link
         .trim()
         .split_once('?')
@@ -1106,7 +1413,10 @@ fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
     let mut kaigi_domain: Option<String> = None;
     let mut kaigi_call_name: Option<String> = None;
     let mut kaigi_privacy_mode: Option<String> = None;
-    let mut version = "1".to_string();
+    let mut expires_at_ms: Option<u64> = None;
+    let mut nonce_hex: Option<String> = None;
+    let mut signature_hex: Option<String> = None;
+    let mut version = JOIN_LINK_VERSION_LEGACY;
 
     for pair in query.split('&') {
         if pair.is_empty() {
@@ -1116,7 +1426,11 @@ fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
         let key = pct_decode(raw_key)?;
         let value = pct_decode(raw_value)?;
         match key.as_str() {
-            "v" => version = value,
+            "v" => {
+                version = value
+                    .parse::<u8>()
+                    .map_err(|_| anyhow!("invalid join link version in join link"))?;
+            }
             "relay" => {
                 relay = Some(
                     value
@@ -1163,12 +1477,27 @@ fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
                     kaigi_privacy_mode = Some(value);
                 }
             }
+            "exp" => {
+                if !value.is_empty() {
+                    expires_at_ms = Some(
+                        value
+                            .parse::<u64>()
+                            .map_err(|_| anyhow!("invalid exp in join link"))?,
+                    );
+                }
+            }
+            "nonce" => {
+                if !value.is_empty() {
+                    nonce_hex = Some(value);
+                }
+            }
+            "sig" => {
+                if !value.is_empty() {
+                    signature_hex = Some(value);
+                }
+            }
             _ => {}
         }
-    }
-
-    if version != "1" {
-        return Err(anyhow!("unsupported join link version: {version}"));
     }
 
     if kaigi_domain.is_some() != kaigi_call_name.is_some() {
@@ -1177,8 +1506,8 @@ fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
         ));
     }
     validate_privacy_mode_arg(kaigi_privacy_mode.as_deref())?;
-
-    Ok(JoinLinkPayload {
+    let payload = JoinLinkPayload {
+        version,
         relay: relay.ok_or_else(|| anyhow!("join link missing relay"))?,
         channel: channel.ok_or_else(|| anyhow!("join link missing channel"))?,
         authenticated,
@@ -1189,7 +1518,20 @@ fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
         kaigi_domain,
         kaigi_call_name,
         kaigi_privacy_mode: normalize_privacy_mode(kaigi_privacy_mode),
-    })
+        expires_at_ms,
+        nonce_hex: nonce_hex.map(|value| normalize_hex_arg(&value)),
+        signature_hex: signature_hex.map(|value| normalize_hex_arg(&value)),
+    };
+    validate_join_link_security(&payload, consume_nonce_replay)?;
+    Ok(payload)
+}
+
+fn parse_join_link(link: &str) -> Result<JoinLinkPayload> {
+    parse_join_link_with_mode(link, true)
+}
+
+fn parse_join_link_for_inspection(link: &str) -> Result<JoinLinkPayload> {
+    parse_join_link_with_mode(link, false)
 }
 
 fn pct_encode(input: &str) -> String {
@@ -1769,7 +2111,11 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
     let session_started_at_ms = now_ms();
     let mut args = args;
 
-    let join_link = args.join_link.as_deref().map(parse_join_link).transpose()?;
+    let join_link = args
+        .join_link
+        .as_deref()
+        .map(parse_join_link_for_inspection)
+        .transpose()?;
     apply_room_chat_join_link_defaults(&mut args, join_link.as_ref());
     apply_room_chat_env_defaults(&mut args);
     args.kaigi_privacy_mode = normalize_privacy_mode(args.kaigi_privacy_mode.take());
@@ -1793,6 +2139,10 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
     let insecure = args.insecure;
 
     validate_nexus_routing_requirement(args.allow_local_handshake, args.torii.as_deref())?;
+    if let Some(link) = args.join_link.as_deref() {
+        // Consume nonce replay window only after argument/default validation succeeds.
+        let _ = parse_join_link(link)?;
+    }
 
     let handshake = if let Some(torii) = args.torii.as_deref() {
         fetch_handshake_params_from_torii(torii).await?
@@ -1947,7 +2297,7 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
         println!("hdr_display auto-detected=true");
     }
     println!(
-        "commands: /mic on|off, /video on|off, /share on|off, /rate <nano_per_min>, /maxshare <u8>, /mute <id>, /muteall, /videooff <id>, /shareoff <id>, /kick <id>, /end (host), /pay <nano>, /quit"
+        "commands: /mic on|off, /video on|off, /share on|off, /rate <nano_per_min>, /maxshare <u8>, /mute <id>, /muteall, /videooff <id>, /shareoff <id>, /kick <id>, /admit <id>, /deny <id>, /cohost <id>, /uncohost <id>, /host <id>, /lock on|off, /waiting on|off, /guests on|off, /recordlocal on|off, /e2eerequired on|off, /maxparticipants <u32>, /devicecap, /profile sdr|hdr, /recordstart, /recordstop, /e2eekey <epoch>, /e2eeack <epoch>, /end (host), /pay <nano>, /quit"
     );
     println!("audio path is active on join; no separate connect-audio step");
 
@@ -1960,6 +2310,7 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
     }
 
     let rate_per_minute_nano = Arc::new(AtomicU64::new(args.pay_rate_per_minute_nano));
+    let policy_state = Arc::new(Mutex::new(LocalSessionPolicyState::default()));
 
     #[derive(Clone)]
     struct PayLedgerCli {
@@ -2086,6 +2437,7 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
     let pay_auto = pay_auto_enabled;
     let fixed_rate = args.pay_rate_per_minute_nano > 0;
     let participant_id_for_reader = participant_id.clone();
+    let policy_state_for_reader = policy_state.clone();
     let reader = tokio::spawn(async move {
         let mut buf = vec![0u8; 16 * 1024];
         let mut decoder = FrameDecoder::new();
@@ -2148,6 +2500,124 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
                                     println!("local_role={}", host_state_label(new_host_state));
                                 }
                             }
+                            KaigiFrame::SessionPolicy(policy) => {
+                                {
+                                    let mut state = policy_state_for_reader.lock().await;
+                                    state.room_lock = policy.room_lock;
+                                    state.waiting_room_enabled = policy.waiting_room_enabled;
+                                    state.guest_join_allowed = policy.guest_join_allowed;
+                                    state.local_recording_allowed = policy.local_recording_allowed;
+                                    state.e2ee_required = policy.e2ee_required;
+                                    state.max_participants = policy.max_participants;
+                                    state.policy_epoch = policy.policy_epoch;
+                                }
+                                println!(
+                                    "session_policy updated_at_ms={} lock={} waiting={} guests={} local_record={} e2ee_required={} max_participants={} epoch={} updated_by={}",
+                                    policy.updated_at_ms,
+                                    policy.room_lock,
+                                    policy.waiting_room_enabled,
+                                    policy.guest_join_allowed,
+                                    policy.local_recording_allowed,
+                                    policy.e2ee_required,
+                                    policy.max_participants,
+                                    policy.policy_epoch,
+                                    policy.updated_by,
+                                );
+                            }
+                            KaigiFrame::PermissionsSnapshot(PermissionsSnapshotFrame {
+                                participant_id,
+                                host,
+                                co_host,
+                                can_moderate,
+                                can_record_local,
+                                epoch,
+                                ..
+                            }) => {
+                                println!(
+                                    "permissions participant={} host={} co_host={} moderate={} record_local={} epoch={}",
+                                    participant_id, host, co_host, can_moderate, can_record_local, epoch
+                                );
+                            }
+                            KaigiFrame::ModerationSigned(moderation) => {
+                                println!(
+                                    "moderation_signed target={:?} action={:?} issued_by={} sent_at_ms={}",
+                                    moderation.target,
+                                    moderation.action,
+                                    moderation.issued_by,
+                                    moderation.sent_at_ms
+                                );
+                            }
+                            KaigiFrame::Moderation(moderation) => {
+                                println!(
+                                    "moderation target={:?} action={:?} sent_at_ms={}",
+                                    moderation.target, moderation.action, moderation.sent_at_ms
+                                );
+                            }
+                            KaigiFrame::RoleGrant(grant) => {
+                                println!(
+                                    "role_grant target={} role={:?} granted_by={} issued_at_ms={}",
+                                    grant.target_participant_id, grant.role, grant.granted_by, grant.issued_at_ms
+                                );
+                            }
+                            KaigiFrame::RoleRevoke(revoke) => {
+                                println!(
+                                    "role_revoke target={} role={:?} revoked_by={} issued_at_ms={}",
+                                    revoke.target_participant_id, revoke.role, revoke.revoked_by, revoke.issued_at_ms
+                                );
+                            }
+                            KaigiFrame::DeviceCapability(cap) => {
+                                println!(
+                                    "device_capability participant={} codecs={:?} hdr_capture={} hdr_render={} max_streams={} reported_at_ms={}",
+                                    cap.participant_id,
+                                    cap.codecs,
+                                    cap.hdr_capture,
+                                    cap.hdr_render,
+                                    cap.max_video_streams,
+                                    cap.reported_at_ms
+                                );
+                            }
+                            KaigiFrame::MediaProfileNegotiation(profile) => {
+                                println!(
+                                    "media_profile participant={} requested={:?} negotiated={:?} codec={} epoch={} at_ms={}",
+                                    profile.participant_id,
+                                    profile.requested_profile,
+                                    profile.negotiated_profile,
+                                    profile.codec,
+                                    profile.epoch,
+                                    profile.at_ms
+                                );
+                            }
+                            KaigiFrame::RecordingNotice(notice) => {
+                                println!(
+                                    "recording_notice participant={} state={:?} local={} issued_by={} at_ms={}",
+                                    notice.participant_id,
+                                    notice.state,
+                                    notice.local_recording,
+                                    notice.issued_by,
+                                    notice.at_ms
+                                );
+                            }
+                            KaigiFrame::E2EEKeyEpoch(epoch) => {
+                                println!(
+                                    "e2ee_key_epoch participant={} epoch={} sent_at_ms={}",
+                                    epoch.participant_id, epoch.epoch, epoch.sent_at_ms
+                                );
+                            }
+                            KaigiFrame::KeyRotationAck(ack) => {
+                                println!(
+                                    "key_rotation_ack participant={} ack_epoch={} received_at_ms={}",
+                                    ack.participant_id, ack.ack_epoch, ack.received_at_ms
+                                );
+                            }
+                            KaigiFrame::ParticipantPresenceDelta(delta) => {
+                                println!(
+                                    "presence_delta seq={} joined={} left={} role_changes={}",
+                                    delta.sequence,
+                                    delta.joined.len(),
+                                    delta.left.len(),
+                                    delta.role_changes.len()
+                                );
+                            }
                             KaigiFrame::Error(err) => {
                                 println!("error: {}", err.message);
                             }
@@ -2175,6 +2645,8 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
     let mut stdin = BufReader::new(tokio::io::stdin());
     let mut line = String::new();
     let mut end_requested = false;
+    let mut media_profile_epoch: u64 = 0;
+    let mut local_e2ee_epoch: u64 = 0;
     loop {
         line.clear();
         let n = stdin.read_line(&mut line).await.context("stdin")?;
@@ -2251,60 +2723,389 @@ async fn room_chat(args: RoomChatArgs) -> Result<()> {
                     max_screen_shares: Some(max_screen_shares),
                 })
             }
-            "/muteall" => KaigiFrame::Moderation(ModerationFrame {
-                sent_at_ms: at_ms,
-                target: ModerationTarget::All,
-                action: ModerationAction::DisableMic,
-            }),
+            "/muteall" => signed_moderation_frame(
+                &participant_id,
+                at_ms,
+                ModerationTarget::All,
+                ModerationAction::DisableMic,
+            ),
             cmd if cmd.starts_with("/mute ") => {
                 let target = cmd.strip_prefix("/mute ").unwrap_or("").trim();
                 if target.is_empty() {
                     return Err(anyhow!("expected /mute <participant_id>"));
                 }
-                KaigiFrame::Moderation(ModerationFrame {
-                    sent_at_ms: at_ms,
-                    target: ModerationTarget::Participant(target.to_string()),
-                    action: ModerationAction::DisableMic,
-                })
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::DisableMic,
+                )
             }
             cmd if cmd.starts_with("/videooff ") => {
                 let target = cmd.strip_prefix("/videooff ").unwrap_or("").trim();
                 if target.is_empty() {
                     return Err(anyhow!("expected /videooff <participant_id>"));
                 }
-                KaigiFrame::Moderation(ModerationFrame {
-                    sent_at_ms: at_ms,
-                    target: ModerationTarget::Participant(target.to_string()),
-                    action: ModerationAction::DisableVideo,
-                })
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::DisableVideo,
+                )
             }
             cmd if cmd.starts_with("/shareoff ") => {
                 let target = cmd.strip_prefix("/shareoff ").unwrap_or("").trim();
                 if target.is_empty() {
                     return Err(anyhow!("expected /shareoff <participant_id>"));
                 }
-                KaigiFrame::Moderation(ModerationFrame {
-                    sent_at_ms: at_ms,
-                    target: ModerationTarget::Participant(target.to_string()),
-                    action: ModerationAction::DisableScreenShare,
-                })
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::DisableScreenShare,
+                )
             }
             cmd if cmd.starts_with("/kick ") => {
                 let target = cmd.strip_prefix("/kick ").unwrap_or("").trim();
                 if target.is_empty() {
                     return Err(anyhow!("expected /kick <participant_id>"));
                 }
-                KaigiFrame::Moderation(ModerationFrame {
-                    sent_at_ms: at_ms,
-                    target: ModerationTarget::Participant(target.to_string()),
-                    action: ModerationAction::Kick,
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::Kick,
+                )
+            }
+            cmd if cmd.starts_with("/admit ") => {
+                let target = cmd.strip_prefix("/admit ").unwrap_or("").trim();
+                if target.is_empty() {
+                    return Err(anyhow!("expected /admit <participant_id>"));
+                }
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::AdmitFromWaiting,
+                )
+            }
+            cmd if cmd.starts_with("/deny ") => {
+                let target = cmd.strip_prefix("/deny ").unwrap_or("").trim();
+                if target.is_empty() {
+                    return Err(anyhow!("expected /deny <participant_id>"));
+                }
+                signed_moderation_frame(
+                    &participant_id,
+                    at_ms,
+                    ModerationTarget::Participant(target.to_string()),
+                    ModerationAction::DenyFromWaiting,
+                )
+            }
+            cmd if cmd.starts_with("/cohost ") => {
+                let target = cmd.strip_prefix("/cohost ").unwrap_or("").trim();
+                if target.is_empty() {
+                    return Err(anyhow!("expected /cohost <participant_id>"));
+                }
+                let signature_hex = deterministic_signature_hex(
+                    "role_grant",
+                    &format!("{participant_id}|{target}|cohost|{at_ms}"),
+                );
+                KaigiFrame::RoleGrant(RoleGrantFrame {
+                    issued_at_ms: at_ms,
+                    target_participant_id: target.to_string(),
+                    role: RoleKind::CoHost,
+                    granted_by: participant_id.clone(),
+                    signature_hex,
                 })
             }
-            "/end" => KaigiFrame::Moderation(ModerationFrame {
-                sent_at_ms: at_ms,
-                target: ModerationTarget::All,
-                action: ModerationAction::Kick,
+            cmd if cmd.starts_with("/host ") => {
+                let target = cmd.strip_prefix("/host ").unwrap_or("").trim();
+                if target.is_empty() {
+                    return Err(anyhow!("expected /host <participant_id>"));
+                }
+                let signature_hex = deterministic_signature_hex(
+                    "role_grant",
+                    &format!("{participant_id}|{target}|host|{at_ms}"),
+                );
+                KaigiFrame::RoleGrant(RoleGrantFrame {
+                    issued_at_ms: at_ms,
+                    target_participant_id: target.to_string(),
+                    role: RoleKind::Host,
+                    granted_by: participant_id.clone(),
+                    signature_hex,
+                })
+            }
+            cmd if cmd.starts_with("/uncohost ") => {
+                let target = cmd.strip_prefix("/uncohost ").unwrap_or("").trim();
+                if target.is_empty() {
+                    return Err(anyhow!("expected /uncohost <participant_id>"));
+                }
+                let signature_hex = deterministic_signature_hex(
+                    "role_revoke",
+                    &format!("{participant_id}|{target}|cohost|{at_ms}"),
+                );
+                KaigiFrame::RoleRevoke(RoleRevokeFrame {
+                    issued_at_ms: at_ms,
+                    target_participant_id: target.to_string(),
+                    role: RoleKind::CoHost,
+                    revoked_by: participant_id.clone(),
+                    signature_hex,
+                })
+            }
+            cmd if cmd.starts_with("/lock ") => {
+                let value = cmd.strip_prefix("/lock ").unwrap_or("").trim();
+                let enabled = parse_on_off(value)?;
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.room_lock = enabled;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            cmd if cmd.starts_with("/waiting ") => {
+                let value = cmd.strip_prefix("/waiting ").unwrap_or("").trim();
+                let enabled = parse_on_off(value)?;
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.waiting_room_enabled = enabled;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            cmd if cmd.starts_with("/guests ") => {
+                let value = cmd.strip_prefix("/guests ").unwrap_or("").trim();
+                let enabled = parse_on_off(value)?;
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.guest_join_allowed = enabled;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            cmd if cmd.starts_with("/recordlocal ") => {
+                let value = cmd.strip_prefix("/recordlocal ").unwrap_or("").trim();
+                let enabled = parse_on_off(value)?;
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.local_recording_allowed = enabled;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            cmd if cmd.starts_with("/e2eerequired ") => {
+                let value = cmd.strip_prefix("/e2eerequired ").unwrap_or("").trim();
+                let enabled = parse_on_off(value)?;
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.e2ee_required = enabled;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            cmd if cmd.starts_with("/maxparticipants ") => {
+                let value = cmd.strip_prefix("/maxparticipants ").unwrap_or("").trim();
+                let max_participants = value
+                    .parse::<u32>()
+                    .map_err(|_| anyhow!("expected /maxparticipants <u32>"))?;
+                if max_participants == 0 {
+                    return Err(anyhow!("expected /maxparticipants >= 1"));
+                }
+                let policy = {
+                    let mut state = policy_state.lock().await;
+                    state.max_participants = max_participants;
+                    state.policy_epoch = state.policy_epoch.saturating_add(1);
+                    SessionPolicyFrame {
+                        updated_at_ms: at_ms,
+                        room_lock: state.room_lock,
+                        waiting_room_enabled: state.waiting_room_enabled,
+                        guest_join_allowed: state.guest_join_allowed,
+                        local_recording_allowed: state.local_recording_allowed,
+                        e2ee_required: state.e2ee_required,
+                        max_participants: state.max_participants,
+                        policy_epoch: state.policy_epoch,
+                        updated_by: participant_id.clone(),
+                        signature_hex: session_policy_signature_hex(
+                            &participant_id,
+                            &state,
+                            at_ms,
+                        ),
+                    }
+                };
+                KaigiFrame::SessionPolicy(policy)
+            }
+            "/devicecap" => KaigiFrame::DeviceCapability(DeviceCapabilityFrame {
+                reported_at_ms: at_ms,
+                participant_id: participant_id.clone(),
+                codecs: vec!["av1".to_string(), "h265".to_string()],
+                hdr_capture,
+                hdr_render: hdr_display,
+                max_video_streams: 4,
             }),
+            cmd if cmd.starts_with("/profile ") => {
+                let value = cmd.strip_prefix("/profile ").unwrap_or("").trim();
+                let requested_profile = match value {
+                    "sdr" => MediaProfileKind::Sdr,
+                    "hdr" => MediaProfileKind::Hdr,
+                    _ => return Err(anyhow!("expected /profile sdr|hdr")),
+                };
+                media_profile_epoch = media_profile_epoch.saturating_add(1);
+                KaigiFrame::MediaProfileNegotiation(MediaProfileNegotiationFrame {
+                    at_ms,
+                    participant_id: participant_id.clone(),
+                    requested_profile: requested_profile.clone(),
+                    negotiated_profile: requested_profile,
+                    codec: "av1".to_string(),
+                    epoch: media_profile_epoch,
+                })
+            }
+            "/recordstart" => KaigiFrame::RecordingNotice(RecordingNoticeFrame {
+                at_ms,
+                participant_id: participant_id.clone(),
+                state: RecordingState::Started,
+                local_recording: true,
+                policy_basis: Some("local-user-action".to_string()),
+                issued_by: participant_id.clone(),
+            }),
+            "/recordstop" => KaigiFrame::RecordingNotice(RecordingNoticeFrame {
+                at_ms,
+                participant_id: participant_id.clone(),
+                state: RecordingState::Stopped,
+                local_recording: true,
+                policy_basis: Some("local-user-action".to_string()),
+                issued_by: participant_id.clone(),
+            }),
+            cmd if cmd.starts_with("/e2eekey ") => {
+                let value = cmd.strip_prefix("/e2eekey ").unwrap_or("").trim();
+                let epoch = value
+                    .parse::<u64>()
+                    .map_err(|_| anyhow!("expected /e2eekey <epoch>"))?;
+                if epoch == 0 {
+                    return Err(anyhow!("expected /e2eekey <epoch>=1.."));
+                }
+                local_e2ee_epoch = epoch.max(local_e2ee_epoch);
+                let public_key_hex = deterministic_signature_hex(
+                    "e2ee_public_key",
+                    &format!("{participant_id}|{epoch}"),
+                );
+                let signature_hex = deterministic_signature_hex(
+                    "e2ee_key_epoch",
+                    &format!("{participant_id}|{epoch}|{at_ms}"),
+                );
+                KaigiFrame::E2EEKeyEpoch(E2EEKeyEpochFrame {
+                    sent_at_ms: at_ms,
+                    participant_id: participant_id.clone(),
+                    epoch,
+                    public_key_hex,
+                    signature_hex,
+                })
+            }
+            cmd if cmd.starts_with("/e2eeack ") => {
+                let value = cmd.strip_prefix("/e2eeack ").unwrap_or("").trim();
+                let ack_epoch = value
+                    .parse::<u64>()
+                    .map_err(|_| anyhow!("expected /e2eeack <epoch>"))?;
+                if ack_epoch == 0 {
+                    return Err(anyhow!("expected /e2eeack <epoch>=1.."));
+                }
+                if local_e2ee_epoch > 0 && ack_epoch > local_e2ee_epoch {
+                    return Err(anyhow!(
+                        "cannot ack future epoch: local={} requested={}",
+                        local_e2ee_epoch,
+                        ack_epoch
+                    ));
+                }
+                KaigiFrame::KeyRotationAck(KeyRotationAckFrame {
+                    received_at_ms: at_ms,
+                    participant_id: participant_id.clone(),
+                    ack_epoch,
+                })
+            }
+            "/end" => signed_moderation_frame(
+                &participant_id,
+                at_ms,
+                ModerationTarget::All,
+                ModerationAction::Kick,
+            ),
             cmd if cmd.starts_with("/pay ") => {
                 let value = cmd.strip_prefix("/pay ").unwrap_or("").trim();
                 let amount_nano_xor = value
@@ -3072,6 +3873,80 @@ fn parse_on_off(value: &str) -> Result<bool> {
     }
 }
 
+fn deterministic_signature_hex(tag: &str, payload: &str) -> String {
+    let mut hasher = blake3::Hasher::new();
+    hasher.update(tag.as_bytes());
+    hasher.update(payload.as_bytes());
+    hex::encode(hasher.finalize().as_bytes())
+}
+
+fn session_policy_signature_hex(
+    updated_by: &str,
+    state: &LocalSessionPolicyState,
+    updated_at_ms: u64,
+) -> String {
+    deterministic_signature_hex(
+        "session_policy",
+        &format!(
+            "{}|{}|{}|{}|{}|{}|{}|{}|{}",
+            updated_by,
+            state.room_lock,
+            state.waiting_room_enabled,
+            state.guest_join_allowed,
+            state.local_recording_allowed,
+            state.e2ee_required,
+            state.max_participants,
+            state.policy_epoch,
+            updated_at_ms
+        ),
+    )
+}
+
+fn moderation_action_token(action: &ModerationAction) -> &'static str {
+    match action {
+        ModerationAction::DisableMic => "disable_mic",
+        ModerationAction::DisableVideo => "disable_video",
+        ModerationAction::DisableScreenShare => "disable_screen_share",
+        ModerationAction::Kick => "kick",
+        ModerationAction::AdmitFromWaiting => "admit_from_waiting",
+        ModerationAction::DenyFromWaiting => "deny_from_waiting",
+    }
+}
+
+fn moderation_target_token(target: &ModerationTarget) -> String {
+    match target {
+        ModerationTarget::All => "all".to_string(),
+        ModerationTarget::Participant(participant_id) => {
+            format!("participant:{participant_id}")
+        }
+    }
+}
+
+fn signed_moderation_frame(
+    issued_by: &str,
+    sent_at_ms: u64,
+    target: ModerationTarget,
+    action: ModerationAction,
+) -> KaigiFrame {
+    let signature_hex = deterministic_signature_hex(
+        "moderation",
+        &format!(
+            "{}|{}|{}|{}",
+            issued_by,
+            moderation_target_token(&target),
+            moderation_action_token(&action),
+            sent_at_ms
+        ),
+    );
+    KaigiFrame::ModerationSigned(ModerationSignedFrame {
+        sent_at_ms,
+        target,
+        action,
+        issued_by: issued_by.to_string(),
+        signature_hex,
+    })
+}
+
 fn is_pay_auto_enabled(args: &RoomChatArgs) -> bool {
     args.pay_auto || !args.no_pay_auto
 }
@@ -3533,7 +4408,12 @@ fn write_route_update(args: WriteRouteUpdateArgs) -> Result<()> {
             args.kaigi_call_name.as_deref(),
         )?;
         validate_privacy_mode_arg(args.kaigi_privacy_mode.as_deref())?;
-        let join = JoinLinkPayload {
+        let mut join = JoinLinkPayload {
+            version: if args.join_link_legacy_v1 {
+                JOIN_LINK_VERSION_LEGACY
+            } else {
+                JOIN_LINK_VERSION_SIGNED
+            },
             relay,
             channel: channel_id,
             authenticated: matches!(access_kind, SoranetAccessKind::Authenticated),
@@ -3544,7 +4424,13 @@ fn write_route_update(args: WriteRouteUpdateArgs) -> Result<()> {
             kaigi_domain: args.kaigi_domain,
             kaigi_call_name: args.kaigi_call_name,
             kaigi_privacy_mode: normalize_privacy_mode(args.kaigi_privacy_mode),
+            expires_at_ms: None,
+            nonce_hex: None,
+            signature_hex: None,
         };
+        if join.version == JOIN_LINK_VERSION_SIGNED {
+            populate_join_link_security_fields(&mut join, args.join_link_expires_in_secs)?;
+        }
         println!("join_link={}", render_join_link(&join));
     }
     Ok(())
@@ -3856,11 +4742,74 @@ mod tests {
         values.iter().map(|value| (*value).to_string()).collect()
     }
 
+    fn clear_join_link_nonce_cache() {
+        if let Some(cache) = SEEN_JOIN_LINK_NONCES.get()
+            && let Ok(mut guard) = cache.lock()
+        {
+            guard.clear();
+        }
+    }
+
+    fn join_link_test_mutex() -> &'static StdMutex<()> {
+        static JOIN_LINK_TEST_MUTEX: OnceLock<StdMutex<()>> = OnceLock::new();
+        JOIN_LINK_TEST_MUTEX.get_or_init(|| StdMutex::new(()))
+    }
+
+    fn with_join_link_test_lock<T>(f: impl FnOnce() -> T) -> T {
+        let _guard = join_link_test_mutex()
+            .lock()
+            .expect("join link test mutex lock");
+        clear_join_link_nonce_cache();
+        let out = f();
+        clear_join_link_nonce_cache();
+        out
+    }
+
     #[test]
-    fn join_link_roundtrip_preserves_fields() {
-        let payload = JoinLinkPayload {
+    fn join_link_v1_roundtrip_preserves_fields() {
+        with_join_link_test_lock(|| {
+            let payload = JoinLinkPayload {
+                version: JOIN_LINK_VERSION_LEGACY,
+                relay: "127.0.0.1:5000".parse().expect("socket"),
+                channel: [0xAB; 32],
+                authenticated: true,
+                insecure: false,
+                server_name: Some("localhost".to_string()),
+                torii: Some("http://127.0.0.1:8080/".to_string()),
+                pay_to: Some("billing@sora".to_string()),
+                kaigi_domain: Some("sora".to_string()),
+                kaigi_call_name: Some("standup".to_string()),
+                kaigi_privacy_mode: Some("zk".to_string()),
+                expires_at_ms: None,
+                nonce_hex: None,
+                signature_hex: None,
+            };
+
+            let link = render_join_link(&payload);
+            let decoded = parse_join_link(&link).expect("parse join link");
+
+            assert_eq!(decoded.version, payload.version);
+            assert_eq!(decoded.relay, payload.relay);
+            assert_eq!(decoded.channel, payload.channel);
+            assert_eq!(decoded.authenticated, payload.authenticated);
+            assert_eq!(decoded.insecure, payload.insecure);
+            assert_eq!(decoded.server_name, payload.server_name);
+            assert_eq!(decoded.torii, payload.torii);
+            assert_eq!(decoded.pay_to, payload.pay_to);
+            assert_eq!(decoded.kaigi_domain, payload.kaigi_domain);
+            assert_eq!(decoded.kaigi_call_name, payload.kaigi_call_name);
+            assert_eq!(decoded.kaigi_privacy_mode, payload.kaigi_privacy_mode);
+            assert_eq!(decoded.expires_at_ms, None);
+            assert_eq!(decoded.nonce_hex, None);
+            assert_eq!(decoded.signature_hex, None);
+        });
+    }
+
+    fn signed_join_link_payload(nonce_hex: &str, expires_at_ms: u64) -> JoinLinkPayload {
+        let mut payload = JoinLinkPayload {
+            version: JOIN_LINK_VERSION_SIGNED,
             relay: "127.0.0.1:5000".parse().expect("socket"),
-            channel: [0xAB; 32],
+            channel: [0xCD; 32],
             authenticated: true,
             insecure: false,
             server_name: Some("localhost".to_string()),
@@ -3869,21 +4818,240 @@ mod tests {
             kaigi_domain: Some("sora".to_string()),
             kaigi_call_name: Some("standup".to_string()),
             kaigi_privacy_mode: Some("zk".to_string()),
+            expires_at_ms: Some(expires_at_ms),
+            nonce_hex: Some(nonce_hex.to_string()),
+            signature_hex: None,
         };
+        payload.signature_hex = Some(join_link_signature_hex(&payload).expect("signature"));
+        payload
+    }
 
-        let link = render_join_link(&payload);
-        let decoded = parse_join_link(&link).expect("parse join link");
+    #[test]
+    fn join_link_v2_roundtrip_preserves_fields() {
+        with_join_link_test_lock(|| {
+            let payload = signed_join_link_payload(
+                "11".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms() + 60_000,
+            );
+            let link = render_join_link(&payload);
+            let decoded = parse_join_link(&link).expect("parse join link");
 
-        assert_eq!(decoded.relay, payload.relay);
-        assert_eq!(decoded.channel, payload.channel);
-        assert_eq!(decoded.authenticated, payload.authenticated);
-        assert_eq!(decoded.insecure, payload.insecure);
-        assert_eq!(decoded.server_name, payload.server_name);
-        assert_eq!(decoded.torii, payload.torii);
-        assert_eq!(decoded.pay_to, payload.pay_to);
-        assert_eq!(decoded.kaigi_domain, payload.kaigi_domain);
-        assert_eq!(decoded.kaigi_call_name, payload.kaigi_call_name);
-        assert_eq!(decoded.kaigi_privacy_mode, payload.kaigi_privacy_mode);
+            assert_eq!(decoded.version, payload.version);
+            assert_eq!(decoded.relay, payload.relay);
+            assert_eq!(decoded.channel, payload.channel);
+            assert_eq!(decoded.authenticated, payload.authenticated);
+            assert_eq!(decoded.insecure, payload.insecure);
+            assert_eq!(decoded.server_name, payload.server_name);
+            assert_eq!(decoded.torii, payload.torii);
+            assert_eq!(decoded.pay_to, payload.pay_to);
+            assert_eq!(decoded.kaigi_domain, payload.kaigi_domain);
+            assert_eq!(decoded.kaigi_call_name, payload.kaigi_call_name);
+            assert_eq!(decoded.kaigi_privacy_mode, payload.kaigi_privacy_mode);
+            assert_eq!(decoded.expires_at_ms, payload.expires_at_ms);
+            assert_eq!(decoded.nonce_hex, payload.nonce_hex);
+            assert_eq!(decoded.signature_hex, payload.signature_hex);
+        });
+    }
+
+    #[test]
+    fn join_link_v2_rejects_replay_nonce() {
+        with_join_link_test_lock(|| {
+            let payload = signed_join_link_payload(
+                "22".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms() + 60_000,
+            );
+            let link = render_join_link(&payload);
+            parse_join_link(&link).expect("first parse should pass");
+            let err = parse_join_link(&link).expect_err("second parse should fail replay");
+            assert!(err.to_string().contains("replay detected"));
+        });
+    }
+
+    #[test]
+    fn join_link_inspection_parse_does_not_consume_nonce() {
+        with_join_link_test_lock(|| {
+            let payload = signed_join_link_payload(
+                "2a".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms() + 60_000,
+            );
+            let link = render_join_link(&payload);
+
+            parse_join_link_for_inspection(&link).expect("inspection parse should pass");
+            parse_join_link_for_inspection(&link).expect("repeat inspection parse should pass");
+            parse_join_link(&link).expect("join parse should still pass after inspection");
+
+            let err = parse_join_link(&link).expect_err("second join parse should fail replay");
+            assert!(err.to_string().contains("replay detected"));
+        });
+    }
+
+    #[test]
+    fn join_link_v2_rejects_expired_link() {
+        with_join_link_test_lock(|| {
+            let payload = signed_join_link_payload(
+                "33".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms().saturating_sub(1),
+            );
+            let link = render_join_link(&payload);
+            let err = parse_join_link(&link).expect_err("expired link should fail");
+            assert!(err.to_string().contains("expired"));
+        });
+    }
+
+    #[test]
+    fn join_link_v1_rejects_exp_nonce_sig_fields() {
+        with_join_link_test_lock(|| {
+            let payload = JoinLinkPayload {
+                version: JOIN_LINK_VERSION_LEGACY,
+                relay: "127.0.0.1:5000".parse().expect("socket"),
+                channel: [0xEF; 32],
+                authenticated: true,
+                insecure: false,
+                server_name: Some("localhost".to_string()),
+                torii: Some("http://127.0.0.1:8080/".to_string()),
+                pay_to: Some("billing@sora".to_string()),
+                kaigi_domain: Some("sora".to_string()),
+                kaigi_call_name: Some("standup".to_string()),
+                kaigi_privacy_mode: Some("zk".to_string()),
+                expires_at_ms: Some(now_ms() + 60_000),
+                nonce_hex: Some("44".repeat(JOIN_LINK_NONCE_BYTES)),
+                signature_hex: Some("55".repeat(32)),
+            };
+            let link = render_join_link(&payload);
+            let err = parse_join_link(&link).expect_err("v1 security fields must be rejected");
+            assert!(err
+                .to_string()
+                .contains("join link v1 must not include exp/nonce/sig fields"));
+        });
+    }
+
+    #[test]
+    fn join_link_v2_rejects_bad_signature() {
+        with_join_link_test_lock(|| {
+            let mut payload = signed_join_link_payload(
+                "66".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms() + 60_000,
+            );
+            payload.signature_hex = Some("77".repeat(32));
+            let link = render_join_link(&payload);
+            let err = parse_join_link(&link).expect_err("bad signature should fail");
+            assert!(err
+                .to_string()
+                .contains("join link signature verification failed"));
+        });
+    }
+
+    #[test]
+    fn join_link_v2_rejects_malformed_nonce() {
+        with_join_link_test_lock(|| {
+            let mut payload = signed_join_link_payload(
+                "88".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms() + 60_000,
+            );
+            payload.nonce_hex = Some("abcd".to_string());
+            payload.signature_hex = Some(join_link_signature_hex(&payload).expect("signature"));
+            let link = render_join_link(&payload);
+            let err = parse_join_link(&link).expect_err("bad nonce should fail");
+            assert!(err.to_string().contains("join link nonce must be"));
+        });
+    }
+
+    #[test]
+    fn join_link_v2_rejects_exp_too_far_in_future() {
+        with_join_link_test_lock(|| {
+            let payload = signed_join_link_payload(
+                "99".repeat(JOIN_LINK_NONCE_BYTES).as_str(),
+                now_ms().saturating_add(
+                    MAX_JOIN_LINK_EXPIRES_IN_SECS
+                        .saturating_mul(1000)
+                        .saturating_add(60_000),
+                ),
+            );
+            let link = render_join_link(&payload);
+            let err = parse_join_link(&link).expect_err("far-future exp should fail");
+            assert!(err
+                .to_string()
+                .contains("join link exp exceeds max future window"));
+        });
+    }
+
+    #[test]
+    fn join_link_nonce_cache_rejects_when_full() {
+        with_join_link_test_lock(|| {
+            let expires_at_ms = now_ms().saturating_add(60_000);
+            for i in 0..MAX_JOIN_LINK_NONCE_CACHE_ENTRIES {
+                let nonce_hex = format!("{i:0width$x}", width = JOIN_LINK_NONCE_BYTES * 2);
+                register_join_link_nonce_once(&nonce_hex, expires_at_ms)
+                    .expect("nonce registration should succeed before cap");
+            }
+            let cache_len = seen_join_link_nonce_cache()
+                .lock()
+                .expect("nonce cache lock")
+                .len();
+            assert_eq!(cache_len, MAX_JOIN_LINK_NONCE_CACHE_ENTRIES);
+
+            let overflow_nonce = format!(
+                "{:0width$x}",
+                MAX_JOIN_LINK_NONCE_CACHE_ENTRIES,
+                width = JOIN_LINK_NONCE_BYTES * 2
+            );
+            let err = register_join_link_nonce_once(&overflow_nonce, expires_at_ms)
+                .expect_err("capacity overflow should be rejected");
+            assert!(err.to_string().contains("nonce cache is full"));
+        });
+    }
+
+    #[test]
+    fn parse_target_platform_accepts_aliases() {
+        assert_eq!(
+            parse_target_platform("web-chromium").expect("parse web-chromium"),
+            TargetPlatform::WebChromium
+        );
+        assert_eq!(
+            parse_target_platform("safari").expect("parse safari"),
+            TargetPlatform::WebSafari
+        );
+        assert_eq!(
+            parse_target_platform("firefox").expect("parse firefox"),
+            TargetPlatform::WebFirefox
+        );
+        assert_eq!(
+            parse_target_platform(" mac_os ").expect("parse mac_os"),
+            TargetPlatform::MacOS
+        );
+        assert_eq!(
+            parse_target_platform("ipad").expect("parse ipad"),
+            TargetPlatform::IPadOS
+        );
+        assert_eq!(
+            parse_target_platform("win").expect("parse win"),
+            TargetPlatform::Windows
+        );
+    }
+
+    #[test]
+    fn parse_target_platform_rejects_unknown_value() {
+        let err = parse_target_platform("ps5").expect_err("unknown platform must fail");
+        assert!(err.to_string().contains("unsupported --platform value"));
+    }
+
+    #[test]
+    fn platform_contract_command_parses_platform_and_pretty_flags() {
+        let cli = Cli::try_parse_from([
+            "kaigi-cli",
+            "platform-contract",
+            "--platform",
+            "web-safari",
+            "--pretty",
+        ])
+        .expect("parse platform-contract command");
+        match cli.cmd {
+            Command::PlatformContract(args) => {
+                assert_eq!(args.platform, Some("web-safari".to_string()));
+                assert!(args.pretty);
+            }
+            _ => panic!("expected platform-contract command"),
+        }
     }
 
     #[test]
@@ -4176,7 +5344,10 @@ mod tests {
             proof_hex: None,
         })
         .expect_err("alias-only join must fail");
-        assert!(err.to_string().contains("--commitment-alias requires --commitment-hex"));
+        assert!(
+            err.to_string()
+                .contains("--commitment-alias requires --commitment-hex")
+        );
     }
 
     #[test]
@@ -5013,6 +6184,61 @@ mod tests {
             "--no-pay-auto",
         ]);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn deterministic_signature_hex_is_stable_and_tag_sensitive() {
+        let a = deterministic_signature_hex("session_policy", "alice|1|payload");
+        let b = deterministic_signature_hex("session_policy", "alice|1|payload");
+        let c = deterministic_signature_hex("role_grant", "alice|1|payload");
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        assert_eq!(a.len(), 64);
+    }
+
+    #[test]
+    fn session_policy_signature_hex_binds_e2ee_required_flag() {
+        let mut policy = LocalSessionPolicyState::default();
+        policy.policy_epoch = 3;
+        policy.max_participants = 250;
+        let with_e2ee = session_policy_signature_hex("host@sora", &policy, 100);
+        policy.e2ee_required = false;
+        let without_e2ee = session_policy_signature_hex("host@sora", &policy, 100);
+        assert_ne!(with_e2ee, without_e2ee);
+    }
+
+    #[test]
+    fn signed_moderation_frame_emits_signature_bound_payload() {
+        let frame = signed_moderation_frame(
+            "host@sora",
+            7,
+            ModerationTarget::Participant("alice@sora".to_string()),
+            ModerationAction::DisableVideo,
+        );
+        let KaigiFrame::ModerationSigned(moderation) = frame else {
+            panic!("expected ModerationSigned");
+        };
+        assert_eq!(moderation.issued_by, "host@sora");
+        assert_eq!(moderation.sent_at_ms, 7);
+        assert_eq!(
+            moderation.signature_hex,
+            deterministic_signature_hex(
+                "moderation",
+                "host@sora|participant:alice@sora|disable_video|7"
+            )
+        );
+    }
+
+    #[test]
+    fn local_session_policy_defaults_match_expected_values() {
+        let policy = LocalSessionPolicyState::default();
+        assert!(!policy.room_lock);
+        assert!(!policy.waiting_room_enabled);
+        assert!(policy.guest_join_allowed);
+        assert!(policy.local_recording_allowed);
+        assert!(policy.e2ee_required);
+        assert_eq!(policy.max_participants, DEFAULT_POLICY_MAX_PARTICIPANTS);
+        assert_eq!(policy.policy_epoch, 0);
     }
 
     #[test]

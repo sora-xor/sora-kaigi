@@ -18,21 +18,58 @@ plumbing before UI/audio/video work.
   roster/events/chat.
   - Enforces: mic OFF + camera OFF + screen share OFF on join.
   - Enforces: limited concurrent screen shares (default: 1; configurable via room config).
-  - Host moderation: mute/stop video/stop share/kick (signalled via `Moderation` frames).
+  - Host/co-host moderation: mute/stop video/stop share/kick (signalled via `Moderation` and
+    `ModerationSigned` frames). Accepted moderation actions are rebroadcast for audit visibility.
+  - Media profile negotiation enforces HDR capability prerequisites and coerces unsupported HDR
+    paths to SDR fallback.
   - Pay-per-use enforcement (nano-XOR). Uses a per-room rate (defaults to non-zero), host can
     update at runtime via `RoomConfigUpdate` (`/rate`, normalized to `>= 1` unless
     `--allow-free-calls` is enabled).
   - By default, payment frames must include `tx_hash_hex` when the room rate is non-zero.
+  - Default session policy requires E2EE bootstrap (`E2EEKeyEpoch`) before plaintext chat/state
+    control frames are accepted.
   - Anonymous mode (`privacy=zk`): blind relay behavior for encrypted control payloads + key-update
     fanout + escrow proof acknowledgements, with stale-proof disconnect guard
     (`--anon-escrow-proof-max-stale-secs`).
 - `kaigi-cli`: demo tool: connect to a relay, open a Kaigi stream, and talk to the hub.
   - `relay-echo`: send `Hello`/`Chat`/`Ping`, print received frames (smoke test).
-  - `room-chat`: interactive room chat (`/mic`, `/video`, `/share`, `/rate`, `/maxshare`, `/mute*`, `/videooff`, `/shareoff`, `/kick`, `/end` host-only, `/pay`, `/quit`).
+  - `room-chat`: interactive room chat (`/mic`, `/video`, `/share`, `/rate`, `/maxshare`, `/mute*`, `/videooff`, `/shareoff`, `/kick`, `/admit`, `/deny`, `/cohost`, `/uncohost`, `/host`, `/lock`, `/waiting`, `/guests`, `/recordlocal`, `/e2eerequired`, `/maxparticipants`, `/devicecap`, `/profile`, `/recordstart`, `/recordstop`, `/e2eekey`, `/e2eeack`, `/end` host-only, `/pay`, `/quit`).
   - `make-join-link` / `decode-join-link`: shareable room routing links (`kaigi://join?...`) with optional Torii/billing/lifecycle metadata.
+  - `platform-contract`: emits frozen browser/native parity contract JSON (`all` or `--platform <target>`).
   - `kaigi-lifecycle`: wrapper for `iroha app kaigi` (`create`, `join`, `leave`, `end`, `record-usage`) with ZK/privacy payload passthrough fields.
   - `write-route-update`: helper for provisioning relay spool route entries on disk.
   - `list-routes`: decode current `kaigi-stream/*.norito` route records from spool catalogs.
+
+## Roadmap and Specs
+
+- Product roadmap: [`roadmap.md`](roadmap.md)
+- Platform parity matrix (frozen M0): [`docs/parity-matrix.md`](docs/parity-matrix.md)
+- Frozen platform contract artifact: [`docs/platform-contract.json`](docs/platform-contract.json)
+- Frozen media capability profiles: [`docs/media-capability-profiles.json`](docs/media-capability-profiles.json)
+- Frozen HDR transport profiles: [`docs/hdr-transport-profiles.json`](docs/hdr-transport-profiles.json)
+- Frozen HDR target-device run results: [`docs/hdr-target-device-results.json`](docs/hdr-target-device-results.json)
+- Frozen A/V baseline profiles: [`docs/av-baseline-profiles.json`](docs/av-baseline-profiles.json)
+- Frozen screen-share constraints: [`docs/screen-share-constraints.json`](docs/screen-share-constraints.json)
+- Frozen parity status contract: [`docs/parity-status-contract.json`](docs/parity-status-contract.json)
+- Parity status waiver contract: [`docs/parity-status-waivers.json`](docs/parity-status-waivers.json)
+- Parity waiver policy contract: [`docs/parity-waiver-policy.json`](docs/parity-waiver-policy.json)
+- Client app workspaces contract: [`docs/client-app-workspaces.json`](docs/client-app-workspaces.json)
+- Client release-track contract: [`docs/client-release-tracks.json`](docs/client-release-tracks.json)
+- Client fallback-drills contract: [`docs/client-fallback-drills.json`](docs/client-fallback-drills.json)
+- Client fallback-drill-results contract: [`docs/client-fallback-drill-results.json`](docs/client-fallback-drill-results.json)
+- Client release-manifest contract: [`docs/client-release-manifest.json`](docs/client-release-manifest.json)
+- Client release-readiness-gates contract: [`docs/client-release-readiness-gates.json`](docs/client-release-readiness-gates.json)
+- Client rollback-manifest contract: [`docs/client-rollback-manifest.json`](docs/client-rollback-manifest.json)
+- Parity waiver fixture manifest: [`docs/fixtures/waivers/manifest.json`](docs/fixtures/waivers/manifest.json)
+- Platform hardening gate contract: [`docs/hardening-gates.json`](docs/hardening-gates.json)
+- Single-train GA approval contract: [`docs/ga-approvals.json`](docs/ga-approvals.json)
+- Platform blocker ledger: [`docs/platform-blockers.json`](docs/platform-blockers.json)
+- Critical defect ledger: [`docs/critical-defects.json`](docs/critical-defects.json)
+- Release playbook: [`docs/release-playbook.md`](docs/release-playbook.md)
+- Rollback playbook: [`docs/rollback-playbook.md`](docs/rollback-playbook.md)
+- Protocol vNext contract (frozen M0): [`docs/protocol-vnext.md`](docs/protocol-vnext.md)
+- Conformance test plan (frozen M0): [`docs/test-plan.md`](docs/test-plan.md)
+- CI conformance contract workflow: [`.github/workflows/conformance-matrix.yml`](.github/workflows/conformance-matrix.yml)
 
 ## Dev Notes
 
@@ -78,6 +115,7 @@ cargo run -p kaigi-cli -- make-join-link \
   --relay 127.0.0.1:5000 \
   --torii http://127.0.0.1:8080 \
   --channel <64-hex-bytes> \
+  --expires-in-secs 3600 \
   --server-name localhost \
   --insecure \
   --pay-to <billing-account-id> \
@@ -85,6 +123,13 @@ cargo run -p kaigi-cli -- make-join-link \
   --kaigi-call-name standup \
   --kaigi-privacy-mode zk
 ```
+
+`make-join-link` emits signed `v=2` links by default (`exp`/`nonce`/`sig`); pass `--legacy-v1`
+only for backward compatibility with older consumers.
+Signed join links enforce bounded expiration windows (`--expires-in-secs` max: 604800 / 7 days)
+and bounded in-process nonce replay cache capacity (fail-closed when full).
+`decode-join-link` validates signature/expiry fields without consuming replay nonces.
+`room-chat` consumes join-link replay nonces only after local argument/default validation passes.
 
 Then:
 
@@ -109,6 +154,164 @@ when emitting `join_link=` output), unless `--allow-local-handshake` is provided
 Host note: `/end` is host-only and ends the meeting for all participants (including host).
 `room-chat` blocks `/end` locally when host role is known to belong to someone else.
 If host role is still unknown, it asks you to wait for `room_config` before `/end`.
+Reconnect note: the hub preserves host/co-host role intent by `participant_id` during temporary
+disconnects; reconnecting reserved moderators can rejoin locked/waiting-room sessions without
+manual readmit and receive updated permission snapshots.
+Backpressure note: when participant outbound queues saturate, the hub emits moderator-visible
+notice frames (`Error`) with rate-limited, aggregate dropped-fanout counts.
+Scale soak note: run `bash scripts/run_scale004_soak.sh` to generate a `SCALE-004` evidence
+report (`target/conformance/scale004-soak-report.json`) and raw test log.
+Security/protocol smoke note: run `bash scripts/run_security_protocol_smoke.sh` to generate a
+multi-scenario evidence report (`target/conformance/security-protocol-smoke-report.json`) and raw
+test log.
+Media/HDR/recording smoke note: run `bash scripts/run_media_hdr_recording_smoke.sh` to generate a
+multi-scenario evidence report (`target/conformance/media-hdr-recording-smoke-report.json`) and
+raw test log.
+HDR transport smoke note: run `bash scripts/run_hdr_transport_smoke.sh` to generate a `HDR-003`
+evidence report (`target/conformance/hdr-transport-smoke-report.json`) and raw test log.
+M2 exit-criteria smoke note: run `bash scripts/run_m2_exit_criteria_smoke.sh` to generate
+`HDR-004` / `HDR-005` evidence (`target/conformance/m2-exit-criteria-smoke-report.json`) and raw
+test log.
+Parity-status smoke note: run `bash scripts/run_parity_status_smoke.sh` to generate `PARITY-001`
+evidence (`target/conformance/parity-status-smoke-report.json`) and raw test log.
+Parity-readiness smoke note: run `bash scripts/run_parity_readiness_smoke.sh` to generate
+`PARITY-002` evidence plus parity readiness detail
+(`target/conformance/parity-readiness-report.json`).
+M3 exit-criteria smoke note: run `bash scripts/run_m3_exit_criteria_smoke.sh` to generate
+`PARITY-003` evidence (`target/conformance/m3-exit-criteria-smoke-report.json`).
+Parity GA smoke note: run `bash scripts/run_parity_ga_smoke.sh` to generate
+`PARITY-004` evidence (`target/conformance/parity-ga-smoke-report.json`).
+Parity downgrade guard smoke note: run `bash scripts/run_parity_downgrade_guard_smoke.sh` to
+generate `PARITY-005` evidence
+(`target/conformance/parity-downgrade-guard-smoke-report.json`).
+Parity waiver policy smoke note: run `bash scripts/run_parity_waiver_policy_smoke.sh` to
+generate `PARITY-006` evidence
+(`target/conformance/parity-waiver-policy-smoke-report.json`).
+Parity waiver fixture manifest smoke note: run
+`bash scripts/run_parity_waiver_fixture_manifest_smoke.sh` to generate `PARITY-008` evidence
+(`target/conformance/parity-waiver-fixture-manifest-smoke-report.json`).
+Parity waiver fixture coverage smoke note: run
+`bash scripts/run_parity_waiver_fixture_coverage_smoke.sh` to generate `PARITY-009` evidence
+(`target/conformance/parity-waiver-fixture-coverage-smoke-report.json`).
+Parity waiver policy negative-fixture smoke note: run
+`bash scripts/run_parity_waiver_policy_negative_smoke.sh` to generate `PARITY-007` evidence
+(`target/conformance/parity-waiver-policy-negative-smoke-report.json`).
+A/V baseline smoke note: run `bash scripts/run_av_baseline_smoke.sh` to generate a `MEDIA-004`
+evidence report (`target/conformance/av-baseline-smoke-report.json`) and raw test log.
+Screen-share constraints smoke note: run `bash scripts/run_screen_share_constraints_smoke.sh` to
+generate a `MEDIA-003` evidence report
+(`target/conformance/screen-share-constraints-smoke-report.json`) and raw test log.
+Control-plane reliability smoke note: run `bash scripts/run_controlplane_reliability_smoke.sh`
+to generate a multi-scenario evidence report
+(`target/conformance/controlplane-reliability-smoke-report.json`) and raw test log.
+Release playbook smoke note: run `bash scripts/run_release_playbook_smoke.sh` to generate
+`OPS-001` / `OPS-002` evidence
+(`target/conformance/release-playbook-smoke-report.json`) and raw test log.
+Release readiness smoke note: run `bash scripts/run_release_readiness_smoke.sh` to generate
+`OPS-003` / `OPS-004` evidence plus a readiness summary
+(`target/conformance/release-readiness-report.json`).
+Hardening/GA smoke note: run `bash scripts/run_hardening_ga_smoke.sh` to generate
+`OPS-005` / `OPS-006` evidence
+(`target/conformance/hardening-ga-smoke-report.json`).
+Platform-contract smoke note: run `bash scripts/run_platform_contract_smoke.sh` to generate a
+browser/native parity evidence report
+(`target/conformance/platform-contract-smoke-report.json`) and raw test log.
+Client-app-workspaces smoke note: run `bash scripts/run_client_app_workspaces_smoke.sh` to
+generate `PLATFORM-007` evidence
+(`target/conformance/client-app-workspaces-smoke-report.json`).
+Client-release-tracks smoke note: run `bash scripts/run_client_release_tracks_smoke.sh` to
+generate `PLATFORM-008` evidence
+(`target/conformance/client-release-tracks-smoke-report.json`).
+Client-release-playbook-alignment smoke note: run
+`bash scripts/run_client_release_playbook_alignment_smoke.sh` to generate `PLATFORM-009`
+evidence (`target/conformance/client-release-playbook-alignment-smoke-report.json`).
+Client-fallback-drills smoke note: run `bash scripts/run_client_fallback_drills_smoke.sh` to
+generate `PLATFORM-010` evidence
+(`target/conformance/client-fallback-drills-smoke-report.json`).
+Client-fallback-drill-results smoke note: run
+`bash scripts/run_client_fallback_drill_results_smoke.sh` to generate `PLATFORM-011` evidence
+(`target/conformance/client-fallback-drill-results-smoke-report.json`).
+Client-release-manifest smoke note: run `bash scripts/run_client_release_manifest_smoke.sh` to
+generate `PLATFORM-012` evidence
+(`target/conformance/client-release-manifest-smoke-report.json`).
+Client-release-readiness-gates smoke note: run
+`bash scripts/run_client_release_readiness_gates_smoke.sh` to generate `PLATFORM-013` evidence
+(`target/conformance/client-release-readiness-gates-smoke-report.json`).
+Client-rollback-manifest smoke note: run
+`bash scripts/run_client_rollback_manifest_smoke.sh` to generate `PLATFORM-014` evidence
+(`target/conformance/client-rollback-manifest-smoke-report.json`).
+Coverage note: run `bash scripts/run_conformance_coverage_check.sh` to verify every mandatory
+scenario in `docs/test-plan.md` has passing evidence in generated reports
+(`target/conformance/conformance-coverage-report.json` + `.log`).
+Evidence index note: run `bash scripts/run_conformance_evidence_index.sh` to generate a markdown
+scenario-to-evidence index (`target/conformance/conformance-evidence-index.md`).
+Bundle note: run `bash scripts/run_conformance_evidence_bundle.sh` to execute all evidence
+suites in one command and generate `target/conformance/conformance-evidence-bundle-report.json`
+plus bundle log output (including coverage validation and evidence index generation).
+Contract note: run `cargo run -p kaigi-cli -- platform-contract --pretty` to print the frozen
+cross-platform/browser parity contract JSON (or scope with `--platform web-safari`, etc.).
+Artifact note: run `bash scripts/export_platform_contract_json.sh` to refresh
+`docs/platform-contract.json` from the current CLI/platform-contract implementation.
+Sync note: run `python3 scripts/validate_ci_contract_sync.py` to ensure workflow scenario/platform
+matrices remain aligned with frozen docs contracts.
+Media profile note: run `python3 scripts/validate_media_capability_profiles.py` to validate
+`docs/media-capability-profiles.json` against `docs/platform-contract.json`.
+HDR transport note: run `python3 scripts/validate_hdr_transport_profiles.py` to validate
+`docs/hdr-transport-profiles.json` against platform/media contracts.
+HDR target-device note: run `python3 scripts/validate_hdr_target_device_results.py` to validate
+`docs/hdr-target-device-results.json` covers passing HDR+SDR fallback runs on every platform.
+A/V baseline note: run `python3 scripts/validate_av_baseline_profiles.py` to validate
+`docs/av-baseline-profiles.json` against `docs/platform-contract.json`.
+Platform blocker note: run `python3 scripts/validate_platform_blockers.py` to validate
+`docs/platform-blockers.json` reports zero open platform blocks.
+Client workspace note: run `python3 scripts/validate_client_app_workspaces.py` to validate
+`docs/client-app-workspaces.json` against mandatory platform coverage and tracked workspace paths.
+Client release-track note: run `python3 scripts/validate_client_release_tracks.py` to validate
+`docs/client-release-tracks.json` against workspace coverage, fallback mapping, and signed native
+release requirements.
+Client release playbook note: run `python3 scripts/validate_client_release_playbook_alignment.py`
+to validate deterministic release/rollback playbook tables against
+`docs/client-release-tracks.json`.
+Client fallback drill note: run `python3 scripts/validate_client_fallback_drills.py` to validate
+`docs/client-fallback-drills.json` against workspace + release-track contracts and native fallback
+recovery-time objectives.
+Client fallback drill results note: run `python3 scripts/validate_client_fallback_drill_results.py`
+to validate `docs/client-fallback-drill-results.json` against drill RTO limits and mandatory web
+browser fallback coverage.
+Client release manifest note: run `python3 scripts/validate_client_release_manifest.py` to
+validate `docs/client-release-manifest.json` against release-track distribution/signing contracts
+and artifact metadata integrity fields.
+Client release readiness note: run `python3 scripts/validate_client_release_readiness_gates.py` to
+validate `docs/client-release-readiness-gates.json` against release manifest + fallback drill
+evidence alignment and bounded RTO outcomes.
+Client rollback manifest note: run `python3 scripts/validate_client_rollback_manifest.py` to
+validate `docs/client-rollback-manifest.json` against release-track/release-manifest contracts
+and rollback artifact pointer integrity.
+Parity status note: run `python3 scripts/validate_parity_status_contract.py` to validate
+`docs/parity-status-contract.json` stays synchronized with `docs/parity-matrix.md`.
+M3 exit note: run `python3 scripts/validate_m3_exit_criteria.py` to validate M3 exit readiness
+from parity status + conformance coverage evidence.
+Parity GA gate note: run `python3 scripts/validate_parity_ga_gate.py` to validate final GA parity
+status across mandatory rows/platforms with passing coverage evidence.
+Parity downgrade guard note: run `python3 scripts/validate_parity_downgrade_guard.py` to enforce
+explicit non-expired waiver requirements for any GA status downgrade in
+`docs/parity-status-waivers.json`.
+Parity waiver policy note: run `python3 scripts/validate_parity_waiver_policy.py` to enforce
+waiver quality constraints from `docs/parity-waiver-policy.json`.
+Parity waiver fixture manifest note: run `python3 scripts/validate_parity_waiver_fixture_manifest.py`
+to validate fixture corpus/manifest integrity for waiver-policy negative coverage.
+Parity waiver fixture coverage note: run `python3 scripts/validate_parity_waiver_fixture_coverage.py`
+to verify fixture corpus contains deterministic negative-path coverage for every waiver policy control.
+Screen-share constraints note: run `python3 scripts/validate_screen_share_constraints.py` to
+validate `docs/screen-share-constraints.json` against `docs/platform-contract.json`.
+Playbook note: run `python3 scripts/validate_release_playbooks.py` to validate
+`docs/release-playbook.md` and `docs/rollback-playbook.md` against mandatory platform coverage.
+Hardening gate note: run `python3 scripts/validate_hardening_gates.py` to validate
+`docs/hardening-gates.json` across mandatory platforms.
+GA approval note: run `python3 scripts/validate_ga_approvals.py` to validate
+`docs/ga-approvals.json` for single-train all-platform approval.
+Critical-defect note: run `python3 scripts/validate_critical_defects.py` to validate
+`docs/critical-defects.json` reports zero open critical defects.
 
 Lifecycle note: `room-chat` can mirror call state to Nexus automatically by passing
 `--kaigi-iroha-config --kaigi-domain --kaigi-call-name --kaigi-participant` (or using

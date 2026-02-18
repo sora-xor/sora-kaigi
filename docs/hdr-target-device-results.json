@@ -1,0 +1,169 @@
+{
+  "schema": "kaigi-hdr-target-device-results/v1",
+  "frozen_at": "2026-02-15",
+  "generated_at": "2026-02-15T00:00:00Z",
+  "results": [
+    {
+      "platform": "WebChromium",
+      "case_id": "webchromium-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Chrome stable on Windows 11 HDR display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR negotiation selected with compatible sender/receiver capabilities."
+    },
+    {
+      "platform": "WebChromium",
+      "case_id": "webchromium-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Chrome stable on SDR-only laptop display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Fallback to SDR path with tone mapping preserved session continuity."
+    },
+    {
+      "platform": "WebSafari",
+      "case_id": "websafari-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Safari stable on macOS HDR-capable display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR transport metadata accepted for supported display path."
+    },
+    {
+      "platform": "WebSafari",
+      "case_id": "websafari-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Safari stable on macOS SDR display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "SDR fallback path validated without negotiation failure."
+    },
+    {
+      "platform": "WebFirefox",
+      "case_id": "webfirefox-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Firefox stable on Windows 11 HDR display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR path validated when both peers advertised HDR support."
+    },
+    {
+      "platform": "WebFirefox",
+      "case_id": "webfirefox-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Firefox stable on SDR-only desktop display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Tone-mapped SDR output verified on unsupported HDR receiver."
+    },
+    {
+      "platform": "MacOS",
+      "case_id": "macos-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "macOS native build on XDR display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Native HDR capture/render path validated."
+    },
+    {
+      "platform": "MacOS",
+      "case_id": "macos-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "macOS native build on SDR external display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Deterministic SDR fallback verified for unsupported display path."
+    },
+    {
+      "platform": "IOS",
+      "case_id": "ios-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "iOS native build on HDR-capable device",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR negotiation selected with supported camera/display stack."
+    },
+    {
+      "platform": "IOS",
+      "case_id": "ios-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "iOS native build on SDR-only device",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "SDR fallback and tone mapping validated under mixed capability room."
+    },
+    {
+      "platform": "IPadOS",
+      "case_id": "ipados-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "iPadOS native build on HDR-capable iPad",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR render path validated for supported display profile."
+    },
+    {
+      "platform": "IPadOS",
+      "case_id": "ipados-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "iPadOS native build on SDR-only iPad",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Fallback behavior validated for unsupported HDR display path."
+    },
+    {
+      "platform": "Windows",
+      "case_id": "windows-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Windows native build on HDR monitor",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR transport metadata validated for native rendering pipeline."
+    },
+    {
+      "platform": "Windows",
+      "case_id": "windows-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Windows native build on SDR monitor",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Tone-mapped SDR fallback remained stable with mixed participants."
+    },
+    {
+      "platform": "Android",
+      "case_id": "android-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Android native build on HDR-capable handset",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR encode/decode path validated for supported hardware profile."
+    },
+    {
+      "platform": "Android",
+      "case_id": "android-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Android native build on SDR-only handset",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Deterministic SDR fallback and tone mapping validated."
+    },
+    {
+      "platform": "Linux",
+      "case_id": "linux-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "Linux native build on HDR-capable compositor/display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR metadata propagation validated for native rendering path."
+    },
+    {
+      "platform": "Linux",
+      "case_id": "linux-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "Linux native build on SDR display",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Fallback path validated with stable room behavior."
+    }
+  ]
+}

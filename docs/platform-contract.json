@@ -1,0 +1,345 @@
+{
+  "contracts": [
+    {
+      "app_surface": "Web",
+      "fallback": {
+        "fallback_platforms": [],
+        "web_fallback_required": false
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "WebChromium",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Web",
+      "fallback": {
+        "fallback_platforms": [],
+        "web_fallback_required": false
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "WebSafari",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Web",
+      "fallback": {
+        "fallback_platforms": [],
+        "web_fallback_required": false
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "WebFirefox",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "MacOS",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "IOS",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "IPadOS",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "Windows",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "Android",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    },
+    {
+      "app_surface": "Native",
+      "fallback": {
+        "fallback_platforms": [
+          "WebChromium",
+          "WebSafari",
+          "WebFirefox"
+        ],
+        "web_fallback_required": true
+      },
+      "media": {
+        "active_profile_indicator": true,
+        "camera_mic_speaker": true,
+        "hdr_on_supported_devices": true,
+        "screen_share": true,
+        "sdr_tonemap_fallback": true
+      },
+      "parity": {
+        "accessibility_shortcuts_and_labels": true,
+        "guest_policy_controls": true,
+        "host_cohost_participant_roles": true,
+        "moderation_commands": true,
+        "participant_scale_target": 500,
+        "reconnect_and_session_continuity": true,
+        "roster_chat_reactions_hand_raise": true,
+        "waiting_room_and_room_lock": true,
+        "wallet_host_identity": true
+      },
+      "platform": "Linux",
+      "recording": {
+        "host_and_participant_recording_paths": true,
+        "local_recording_policy_controlled": true
+      },
+      "security": {
+        "e2ee_default": true,
+        "replay_resistance": true,
+        "signed_high_risk_actions": true
+      }
+    }
+  ],
+  "frozen_at": "2026-02-15",
+  "schema": "kaigi-platform-contract/v1"
+}

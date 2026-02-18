@@ -1,0 +1,133 @@
+{
+  "schema": "kaigi-client-release-tracks/v1",
+  "frozen_at": "2026-02-15",
+  "release_tracks": [
+    {
+      "workspace_id": "android",
+      "platforms": [
+        "Android"
+      ],
+      "ci_build_command": "./gradlew :app:bundleRelease",
+      "ci_smoke_command": "./gradlew :app:testReleaseUnitTest",
+      "artifact_kind": "play-aab",
+      "distribution_channel": "google-play",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "ios",
+      "platforms": [
+        "iOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIOS archive",
+      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiIOSTests",
+      "artifact_kind": "app-store-ipa",
+      "distribution_channel": "app-store-connect",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "ipados",
+      "platforms": [
+        "iPadOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIPadOS archive",
+      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiIPadOSTests",
+      "artifact_kind": "app-store-ipa",
+      "distribution_channel": "app-store-connect",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "linux",
+      "platforms": [
+        "Linux"
+      ],
+      "ci_build_command": "cargo build --release -p kaigi-linux-client",
+      "ci_smoke_command": "cargo test -p kaigi-linux-client --release",
+      "artifact_kind": "signed-linux-package",
+      "distribution_channel": "signed-package-repo",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "macos",
+      "platforms": [
+        "macOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiMacOS archive",
+      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiMacOSTests",
+      "artifact_kind": "signed-dmg",
+      "distribution_channel": "apple-notarized-distribution",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "web",
+      "platforms": [
+        "Web Chromium",
+        "Web Safari",
+        "Web Firefox"
+      ],
+      "ci_build_command": "npm run build:web",
+      "ci_smoke_command": "npm run test:web-smoke",
+      "artifact_kind": "ipfs-web-bundle",
+      "distribution_channel": "ipfs",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": false,
+      "hdr_validation_required": true
+    },
+    {
+      "workspace_id": "windows",
+      "platforms": [
+        "Windows"
+      ],
+      "ci_build_command": "msbuild Kaigi.Windows.sln /p:Configuration=Release",
+      "ci_smoke_command": "vstest.console.exe Kaigi.Windows.Tests.dll",
+      "artifact_kind": "signed-msi",
+      "distribution_channel": "winget-msi",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    }
+  ]
+}

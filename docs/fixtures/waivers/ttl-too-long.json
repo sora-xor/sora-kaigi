@@ -1,0 +1,18 @@
+{
+  "schema": "kaigi-parity-status-waivers/v1",
+  "frozen_at": "2026-02-15",
+  "generated_at": "2026-02-15T00:00:00Z",
+  "waivers": [
+    {
+      "area": "core",
+      "name": "Local recording (policy-controlled)",
+      "platform": "Windows",
+      "target_status": "B",
+      "reason": "Temporary driver interoperability regression is mitigated with guarded feature flags while upstream fix is verified.",
+      "owner": "team/windows_media",
+      "approved_by": "release-management:oncall",
+      "ticket": "RELEASE-1234",
+      "expires_at": "__EXPIRES_PLUS_60_DAYS__"
+    }
+  ]
+}

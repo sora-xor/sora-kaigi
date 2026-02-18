@@ -1,0 +1,59 @@
+{
+  "schema": "kaigi-parity-waiver-fixture-manifest/v1",
+  "frozen_at": "2026-02-15",
+  "fixtures": [
+    {
+      "id": "approver_pattern",
+      "fixture_file": "docs/fixtures/waivers/approver-pattern.json",
+      "expected": "fail",
+      "expect_error_contains": "approved_by format invalid"
+    },
+    {
+      "id": "owner_approver_not_distinct",
+      "fixture_file": "docs/fixtures/waivers/owner-approver-not-distinct.json",
+      "expected": "fail",
+      "expect_error_contains": "owner and approver must differ"
+    },
+    {
+      "id": "owner_pattern",
+      "fixture_file": "docs/fixtures/waivers/owner-pattern.json",
+      "expected": "fail",
+      "expect_error_contains": "owner format invalid"
+    },
+    {
+      "id": "reason_too_long",
+      "fixture_file": "docs/fixtures/waivers/reason-too-long.json",
+      "expected": "fail",
+      "expect_error_contains": "reason too long"
+    },
+    {
+      "id": "short_reason",
+      "fixture_file": "docs/fixtures/waivers/short-reason.json",
+      "expected": "fail",
+      "expect_error_contains": "reason too short"
+    },
+    {
+      "id": "target_status_not_allowed",
+      "fixture_file": "docs/fixtures/waivers/target-status-not-allowed.json",
+      "expected": "fail",
+      "expect_error_contains": "target_status must be one of"
+    },
+    {
+      "id": "ticket_pattern",
+      "fixture_file": "docs/fixtures/waivers/ticket-pattern.json",
+      "expected": "fail",
+      "expect_error_contains": "ticket format invalid"
+    },
+    {
+      "id": "ttl_too_long",
+      "fixture_file": "docs/fixtures/waivers/ttl-too-long.json",
+      "expected": "fail",
+      "expect_error_contains": "ttl exceeds policy max"
+    },
+    {
+      "id": "valid_control",
+      "fixture_file": "docs/fixtures/waivers/valid-control.json",
+      "expected": "pass"
+    }
+  ]
+}

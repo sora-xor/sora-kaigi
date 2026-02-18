@@ -1,0 +1,16 @@
+{
+  "schema": "kaigi-parity-waiver-policy/v1",
+  "frozen_at": "2026-02-15",
+  "min_reason_chars": 32,
+  "max_reason_chars": 2000,
+  "max_waiver_ttl_days": 30,
+  "allowed_target_statuses": [
+    "P",
+    "A",
+    "B"
+  ],
+  "owner_pattern": "^team/[a-z0-9][a-z0-9_-]{1,31}$",
+  "approved_by_pattern": "^release-management:[a-z0-9][a-z0-9_-]{1,31}$",
+  "ticket_pattern": "^[A-Z]{2,10}-[0-9]{3,}$",
+  "require_distinct_owner_and_approver": true
+}

@@ -1,0 +1,119 @@
+{
+  "schema": "kaigi-media-capability-profiles/v1",
+  "frozen_at": "2026-02-15",
+  "profiles": [
+    {
+      "platform": "WebChromium",
+      "capture_pipeline": "browser_getusermedia",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "av1",
+        "vp9",
+        "h264"
+      ]
+    },
+    {
+      "platform": "WebSafari",
+      "capture_pipeline": "browser_getusermedia",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "h264"
+      ]
+    },
+    {
+      "platform": "WebFirefox",
+      "capture_pipeline": "browser_getusermedia",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "vp9",
+        "h264"
+      ]
+    },
+    {
+      "platform": "MacOS",
+      "capture_pipeline": "native_avfoundation",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "av1",
+        "h264"
+      ]
+    },
+    {
+      "platform": "IOS",
+      "capture_pipeline": "native_avfoundation",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "h264"
+      ]
+    },
+    {
+      "platform": "IPadOS",
+      "capture_pipeline": "native_avfoundation",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "h264"
+      ]
+    },
+    {
+      "platform": "Windows",
+      "capture_pipeline": "native_media_foundation",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "av1",
+        "h265",
+        "h264"
+      ]
+    },
+    {
+      "platform": "Android",
+      "capture_pipeline": "native_camera2",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "av1",
+        "h264"
+      ]
+    },
+    {
+      "platform": "Linux",
+      "capture_pipeline": "native_v4l2_pipewire",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "av1",
+        "vp9",
+        "h264"
+      ]
+    }
+  ]
+}

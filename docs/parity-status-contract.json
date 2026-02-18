@@ -1,0 +1,347 @@
+{
+  "schema": "kaigi-parity-status-contract/v1",
+  "frozen_at": "2026-02-15",
+  "platforms": [
+    "Web Chromium",
+    "Web Safari",
+    "Web Firefox",
+    "macOS",
+    "iOS",
+    "iPadOS",
+    "Windows",
+    "Android",
+    "Linux"
+  ],
+  "capabilities": [
+    {
+      "area": "core",
+      "name": "Wallet host/co-host identity",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Guest join with restricted policy",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Host/co-host/participant role model",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Moderation: mute/video-off/share-off/kick",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Waiting room + room lock",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Roster, chat, reactions, hand raise",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "E2EE default + key rotation",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Camera and microphone controls",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Screen share",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Local recording (policy-controlled)",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Reconnect and session continuity",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "500 interactive participant support",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "core",
+      "name": "Accessibility shortcuts and labels",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "hdr",
+      "name": "Device HDR capability detection",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "hdr",
+      "name": "HDR capture on supported devices",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "hdr",
+      "name": "HDR render on supported displays",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "hdr",
+      "name": "SDR fallback with tone mapping",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "hdr",
+      "name": "UX indicator for active media profile",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "governance",
+      "name": "Host assignment and transfer",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "governance",
+      "name": "Co-host assignment and revocation",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "governance",
+      "name": "Recording policy enforcement",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    },
+    {
+      "area": "governance",
+      "name": "Signed moderation action audit trail",
+      "statuses": {
+        "Web Chromium": "GA",
+        "Web Safari": "GA",
+        "Web Firefox": "GA",
+        "macOS": "GA",
+        "iOS": "GA",
+        "iPadOS": "GA",
+        "Windows": "GA",
+        "Android": "GA",
+        "Linux": "GA"
+      }
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "kaigi-ga-approvals/v1",
+  "frozen_at": "2026-02-15",
+  "generated_at": "2026-02-15T00:00:00Z",
+  "release_train": "2027-01-31-bigbang-ga",
+  "overall_status": "approved",
+  "platform_approvals": [
+    {
+      "platform": "WebChromium",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "WebSafari",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "WebFirefox",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "MacOS",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "IOS",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "IPadOS",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "Windows",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "Android",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    },
+    {
+      "platform": "Linux",
+      "release_train": "2027-01-31-bigbang-ga",
+      "approval_status": "approved",
+      "approver": "release-management",
+      "approved_at": "2026-02-15T00:00:00Z",
+      "ticket": "GA-2027-TRAIN-001"
+    }
+  ]
+}

@@ -31,6 +31,28 @@ pub enum KaigiFrame {
     RoomConfigUpdate(RoomConfigUpdateFrame),
     /// Host moderation actions (mute/stop video/stop share/kick).
     Moderation(ModerationFrame),
+    /// Signed host/co-host moderation action (vNext).
+    ModerationSigned(ModerationSignedFrame),
+    /// Role assignment and policy elevation (vNext).
+    RoleGrant(RoleGrantFrame),
+    /// Role revocation and policy downgrade (vNext).
+    RoleRevoke(RoleRevokeFrame),
+    /// Effective permission snapshot for a participant (vNext).
+    PermissionsSnapshot(PermissionsSnapshotFrame),
+    /// Authoritative room policy state (vNext).
+    SessionPolicy(SessionPolicyFrame),
+    /// Declared endpoint device/media capabilities (vNext).
+    DeviceCapability(DeviceCapabilityFrame),
+    /// Negotiated media profile between SDR/HDR paths (vNext).
+    MediaProfileNegotiation(MediaProfileNegotiationFrame),
+    /// Recording state transition notice (vNext).
+    RecordingNotice(RecordingNoticeFrame),
+    /// E2EE key epoch announcement (vNext).
+    E2EEKeyEpoch(E2EEKeyEpochFrame),
+    /// Acknowledgement of applied key epoch (vNext).
+    KeyRotationAck(KeyRotationAckFrame),
+    /// Delta roster updates for large rooms (vNext).
+    ParticipantPresenceDelta(ParticipantPresenceDeltaFrame),
     Chat(ChatFrame),
     ParticipantState(ParticipantStateFrame),
     /// Client-to-hub payment signal (dev harness).
@@ -237,6 +259,154 @@ pub struct ModerationFrame {
 
 #[allow(unexpected_cfgs)]
 #[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct ModerationSignedFrame {
+    pub sent_at_ms: u64,
+    pub target: ModerationTarget,
+    pub action: ModerationAction,
+    pub issued_by: String,
+    pub signature_hex: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum RoleKind {
+    Host,
+    CoHost,
+    Participant,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct RoleGrantFrame {
+    pub issued_at_ms: u64,
+    pub target_participant_id: String,
+    pub role: RoleKind,
+    pub granted_by: String,
+    pub signature_hex: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct RoleRevokeFrame {
+    pub issued_at_ms: u64,
+    pub target_participant_id: String,
+    pub role: RoleKind,
+    pub revoked_by: String,
+    pub signature_hex: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct PermissionsSnapshotFrame {
+    pub at_ms: u64,
+    pub participant_id: String,
+    pub host: bool,
+    pub co_host: bool,
+    pub can_moderate: bool,
+    pub can_record_local: bool,
+    pub epoch: u64,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct SessionPolicyFrame {
+    pub updated_at_ms: u64,
+    pub room_lock: bool,
+    pub waiting_room_enabled: bool,
+    pub guest_join_allowed: bool,
+    pub local_recording_allowed: bool,
+    pub e2ee_required: bool,
+    pub max_participants: u32,
+    pub policy_epoch: u64,
+    pub updated_by: String,
+    pub signature_hex: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct DeviceCapabilityFrame {
+    pub reported_at_ms: u64,
+    pub participant_id: String,
+    pub codecs: Vec<String>,
+    pub hdr_capture: bool,
+    pub hdr_render: bool,
+    pub max_video_streams: u16,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum MediaProfileKind {
+    Sdr,
+    Hdr,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct MediaProfileNegotiationFrame {
+    pub at_ms: u64,
+    pub participant_id: String,
+    pub requested_profile: MediaProfileKind,
+    pub negotiated_profile: MediaProfileKind,
+    pub codec: String,
+    pub epoch: u64,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum RecordingState {
+    Started,
+    Stopped,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct RecordingNoticeFrame {
+    pub at_ms: u64,
+    pub participant_id: String,
+    pub state: RecordingState,
+    pub local_recording: bool,
+    pub policy_basis: Option<String>,
+    pub issued_by: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct E2EEKeyEpochFrame {
+    pub sent_at_ms: u64,
+    pub participant_id: String,
+    pub epoch: u64,
+    pub public_key_hex: String,
+    pub signature_hex: String,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct KeyRotationAckFrame {
+    pub received_at_ms: u64,
+    pub participant_id: String,
+    pub ack_epoch: u64,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct RoleChangeEntry {
+    pub participant_id: String,
+    pub role: RoleKind,
+    pub granted: bool,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct ParticipantPresenceDeltaFrame {
+    pub at_ms: u64,
+    pub sequence: u64,
+    pub joined: Vec<ParticipantSnapshot>,
+    pub left: Vec<ParticipantLeftFrame>,
+    pub role_changes: Vec<RoleChangeEntry>,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
 pub enum ModerationTarget {
     All,
     Participant(String),
@@ -249,6 +419,8 @@ pub enum ModerationAction {
     DisableMic,
     DisableVideo,
     DisableScreenShare,
+    AdmitFromWaiting,
+    DenyFromWaiting,
 }
 
 #[allow(unexpected_cfgs)]
@@ -417,6 +589,73 @@ mod tests {
     }
 
     #[test]
+    fn decode_rejects_malformed_payload_bytes() {
+        let mut dec = FrameDecoder::new();
+        let payload = vec![0xde, 0xad, 0xbe, 0xef];
+        let mut framed = (payload.len() as u32).to_be_bytes().to_vec();
+        framed.extend_from_slice(&payload);
+        dec.push(&framed);
+        let err = dec.try_next().expect_err("expected norito decode failure");
+        assert!(
+            err.to_string().contains("norito decode"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn legacy_frames_roundtrip_with_vnext_decoder() {
+        let frames = vec![
+            KaigiFrame::Hello(HelloFrame {
+                protocol_version: PROTOCOL_VERSION,
+                participant_id: "legacy-host@sora".to_string(),
+                display_name: Some("Legacy Host".to_string()),
+                mic_enabled: false,
+                video_enabled: false,
+                screen_share_enabled: false,
+                hdr_display: false,
+                hdr_capture: false,
+            }),
+            KaigiFrame::Chat(ChatFrame {
+                sent_at_ms: 10,
+                from_participant_id: "legacy-host@sora".to_string(),
+                from_display_name: Some("Legacy Host".to_string()),
+                text: "legacy-chat".to_string(),
+            }),
+            KaigiFrame::ParticipantState(ParticipantStateFrame {
+                updated_at_ms: 11,
+                mic_enabled: Some(true),
+                video_enabled: Some(false),
+                screen_share_enabled: Some(false),
+            }),
+            KaigiFrame::RoomConfigUpdate(RoomConfigUpdateFrame {
+                updated_at_ms: 12,
+                rate_per_minute_nano: Some(1_000),
+                max_screen_shares: Some(2),
+            }),
+            KaigiFrame::Moderation(ModerationFrame {
+                sent_at_ms: 13,
+                target: ModerationTarget::All,
+                action: ModerationAction::DisableMic,
+            }),
+            KaigiFrame::Payment(PaymentFrame {
+                sent_at_ms: 14,
+                amount_nano_xor: 5_000,
+                tx_hash_hex: Some("11".repeat(32)),
+            }),
+            KaigiFrame::Ping(PingFrame { nonce: 99 }),
+        ];
+
+        for frame in frames {
+            let bytes = encode_framed(&frame).expect("encode");
+            let mut dec = FrameDecoder::new();
+            dec.push(&bytes);
+            let out = dec.try_next().expect("decode").expect("frame");
+            assert_eq!(out, frame);
+            assert_eq!(dec.buffer_len(), 0);
+        }
+    }
+
+    #[test]
     fn anon_hello_roundtrip() {
         let frame = KaigiFrame::AnonHello(AnonHelloFrame {
             protocol_version: PROTOCOL_VERSION,
@@ -506,6 +745,119 @@ mod tests {
         });
 
         for frame in [proof, ack] {
+            let bytes = encode_framed(&frame).expect("encode");
+            let mut dec = FrameDecoder::new();
+            dec.push(&bytes);
+            let out = dec.try_next().expect("decode").expect("frame");
+            assert_eq!(out, frame);
+        }
+    }
+
+    #[test]
+    fn vnext_frames_roundtrip() {
+        let frames = vec![
+            KaigiFrame::ModerationSigned(ModerationSignedFrame {
+                sent_at_ms: 0,
+                target: ModerationTarget::All,
+                action: ModerationAction::DisableMic,
+                issued_by: "p-1".to_string(),
+                signature_hex: "aa".repeat(32),
+            }),
+            KaigiFrame::RoleGrant(RoleGrantFrame {
+                issued_at_ms: 1,
+                target_participant_id: "p-2".to_string(),
+                role: RoleKind::CoHost,
+                granted_by: "p-1".to_string(),
+                signature_hex: "ab".repeat(32),
+            }),
+            KaigiFrame::RoleRevoke(RoleRevokeFrame {
+                issued_at_ms: 2,
+                target_participant_id: "p-2".to_string(),
+                role: RoleKind::CoHost,
+                revoked_by: "p-1".to_string(),
+                signature_hex: "cd".repeat(32),
+            }),
+            KaigiFrame::PermissionsSnapshot(PermissionsSnapshotFrame {
+                at_ms: 3,
+                participant_id: "p-2".to_string(),
+                host: false,
+                co_host: true,
+                can_moderate: true,
+                can_record_local: true,
+                epoch: 9,
+            }),
+            KaigiFrame::SessionPolicy(SessionPolicyFrame {
+                updated_at_ms: 4,
+                room_lock: false,
+                waiting_room_enabled: true,
+                guest_join_allowed: true,
+                local_recording_allowed: true,
+                e2ee_required: true,
+                max_participants: 500,
+                policy_epoch: 3,
+                updated_by: "p-1".to_string(),
+                signature_hex: "ef".repeat(32),
+            }),
+            KaigiFrame::DeviceCapability(DeviceCapabilityFrame {
+                reported_at_ms: 5,
+                participant_id: "p-2".to_string(),
+                codecs: vec!["av1".to_string(), "h265".to_string()],
+                hdr_capture: true,
+                hdr_render: true,
+                max_video_streams: 4,
+            }),
+            KaigiFrame::MediaProfileNegotiation(MediaProfileNegotiationFrame {
+                at_ms: 6,
+                participant_id: "p-2".to_string(),
+                requested_profile: MediaProfileKind::Hdr,
+                negotiated_profile: MediaProfileKind::Sdr,
+                codec: "av1".to_string(),
+                epoch: 10,
+            }),
+            KaigiFrame::RecordingNotice(RecordingNoticeFrame {
+                at_ms: 7,
+                participant_id: "p-3".to_string(),
+                state: RecordingState::Started,
+                local_recording: true,
+                policy_basis: Some("host-allowed".to_string()),
+                issued_by: "p-1".to_string(),
+            }),
+            KaigiFrame::E2EEKeyEpoch(E2EEKeyEpochFrame {
+                sent_at_ms: 8,
+                participant_id: "p-3".to_string(),
+                epoch: 11,
+                public_key_hex: "01".repeat(32),
+                signature_hex: "23".repeat(32),
+            }),
+            KaigiFrame::KeyRotationAck(KeyRotationAckFrame {
+                received_at_ms: 9,
+                participant_id: "p-4".to_string(),
+                ack_epoch: 11,
+            }),
+            KaigiFrame::ParticipantPresenceDelta(ParticipantPresenceDeltaFrame {
+                at_ms: 10,
+                sequence: 12,
+                joined: vec![ParticipantSnapshot {
+                    at_ms: 10,
+                    participant_id: "p-5".to_string(),
+                    display_name: Some("Dana".to_string()),
+                    mic_enabled: false,
+                    video_enabled: false,
+                    screen_share_enabled: false,
+                }],
+                left: vec![ParticipantLeftFrame {
+                    at_ms: 10,
+                    participant_id: "p-6".to_string(),
+                }],
+                role_changes: vec![RoleChangeEntry {
+                    participant_id: "p-2".to_string(),
+                    role: RoleKind::CoHost,
+                    granted: true,
+                }],
+            }),
+        ];
+
+        for frame in frames {
             let bytes = encode_framed(&frame).expect("encode");
             let mut dec = FrameDecoder::new();
             dec.push(&bytes);

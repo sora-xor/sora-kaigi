@@ -1,0 +1,115 @@
+{
+  "schema": "kaigi-client-rollback-manifest/v1",
+  "frozen_at": "2026-02-15",
+  "release_train": "2027-01-31-bigbang-ga",
+  "rollback_target_release_train": "2026-12-15-rc3",
+  "artifacts": [
+    {
+      "workspace_id": "android",
+      "platforms": [
+        "Android"
+      ],
+      "distribution_channel": "google-play",
+      "rollback_artifact_uri": "gs://kaigi-releases/2026-12-15/android/kaigi-release.aab",
+      "rollback_artifact_sha256": "59be55684fb986f8708e2fd0deec7a95ca5cf35bb40f917df9dcf2d0f0f2d1ec",
+      "rollback_signature_ref": "cosign://kaigi-releases/2026-12-15/android/kaigi-release.aab.sig",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/android/kaigi-release.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/android/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:10:00Z"
+    },
+    {
+      "workspace_id": "ios",
+      "platforms": [
+        "iOS"
+      ],
+      "distribution_channel": "app-store-connect",
+      "rollback_artifact_uri": "asc://kaigi/2026-12-15/ios/build/176",
+      "rollback_artifact_sha256": "7f2d73a3d4ed5fa53c4db4e7fb5b3e83bf038f9ec4af4d86853eb5cfc67e826b",
+      "rollback_signature_ref": "codesign://kaigi/ios/2026-12-15/build-176",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/ios/kaigi-ios.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/ios/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:20:00Z"
+    },
+    {
+      "workspace_id": "ipados",
+      "platforms": [
+        "iPadOS"
+      ],
+      "distribution_channel": "app-store-connect",
+      "rollback_artifact_uri": "asc://kaigi/2026-12-15/ipados/build/177",
+      "rollback_artifact_sha256": "14958a6a4458ed7ea8d1dbe8d1facf46a5fcb98e6d362f2437e4f7907009a53d",
+      "rollback_signature_ref": "codesign://kaigi/ipados/2026-12-15/build-177",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/ipados/kaigi-ipados.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/ipados/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:30:00Z"
+    },
+    {
+      "workspace_id": "linux",
+      "platforms": [
+        "Linux"
+      ],
+      "distribution_channel": "signed-package-repo",
+      "rollback_artifact_uri": "https://releases.kaigi.example/2026-12-15/linux/kaigi_0.9.8_amd64.deb",
+      "rollback_artifact_sha256": "8a9725de18bf6bdcfb7ef95af40dddf851839db49a1d1ae95d57f79e50d278f2",
+      "rollback_signature_ref": "minisign://kaigi-releases/2026-12-15/linux/kaigi_0.9.8_amd64.deb.minisig",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/linux/kaigi-linux.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/linux/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:40:00Z"
+    },
+    {
+      "workspace_id": "macos",
+      "platforms": [
+        "macOS"
+      ],
+      "distribution_channel": "apple-notarized-distribution",
+      "rollback_artifact_uri": "https://releases.kaigi.example/2026-12-15/macos/Kaigi-0.9.8.dmg",
+      "rollback_artifact_sha256": "e7ff04fcd4d6f9dc75f2246c68cde453e60d438e2ee4f778783f8f517078e34e",
+      "rollback_signature_ref": "notary://kaigi/macos/2026-12-15/notary-ticket",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/macos/kaigi-macos.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/macos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:50:00Z"
+    },
+    {
+      "workspace_id": "web",
+      "platforms": [
+        "Web Chromium",
+        "Web Safari",
+        "Web Firefox"
+      ],
+      "distribution_channel": "ipfs",
+      "rollback_artifact_uri": "ipfs://bafybeie5q6gx3bfomst35ww3h4f7owmrtfgg72mkgmng4h4daotd74k6pm",
+      "rollback_artifact_sha256": "335674f1775878a4d5991cf41d05f24be8296008b09fbb2271484e34166003d2",
+      "rollback_signature_ref": "integrity://kaigi-web/2026-12-15/subresource-integrity-manifest.json",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/web/kaigi-web.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/web/provenance.intoto.jsonl",
+      "signing_verified": false,
+      "status": "ready",
+      "published_at": "2026-02-15T14:00:00Z"
+    },
+    {
+      "workspace_id": "windows",
+      "platforms": [
+        "Windows"
+      ],
+      "distribution_channel": "winget-msi",
+      "rollback_artifact_uri": "https://releases.kaigi.example/2026-12-15/windows/KaigiSetup-0.9.8.msi",
+      "rollback_artifact_sha256": "c788168208f348fb6e4f05078d6285d4e5865ed94f4890853abe7f4cd6be7fb0",
+      "rollback_signature_ref": "authenticode://kaigi/windows/2026-12-15/msi-signature",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/windows/kaigi-windows.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/windows/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T14:10:00Z"
+    }
+  ]
+}

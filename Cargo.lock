@@ -3018,6 +3018,7 @@ dependencies = [
  "clap",
  "hex",
  "iroha",
+ "kaigi-platform-contract",
  "kaigi-soranet-client",
  "kaigi-wire",
  "norito",
@@ -3035,6 +3036,7 @@ name = "kaigi-hub-echo"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "blake3",
  "clap",
  "futures-util",
  "hex",
@@ -3044,6 +3046,13 @@ dependencies = [
  "tokio-tungstenite",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kaigi-platform-contract"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

@@ -1,0 +1,17 @@
+{
+  "schema": "kaigi-platform-blockers/v1",
+  "frozen_at": "2026-02-15",
+  "updated_at": "2026-02-15T00:00:00Z",
+  "tracked_platforms": [
+    "WebChromium",
+    "WebSafari",
+    "WebFirefox",
+    "MacOS",
+    "IOS",
+    "IPadOS",
+    "Windows",
+    "Android",
+    "Linux"
+  ],
+  "open_blocks": []
+}

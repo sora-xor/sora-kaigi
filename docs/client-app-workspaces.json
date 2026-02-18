@@ -1,0 +1,91 @@
+{
+  "schema": "kaigi-client-app-workspaces/v1",
+  "frozen_at": "2026-02-15",
+  "workspaces": [
+    {
+      "id": "web",
+      "implementation": "web",
+      "path": "clients/web",
+      "platforms": [
+        "Web Chromium",
+        "Web Safari",
+        "Web Firefox"
+      ],
+      "build_system": "TypeScript + WebRTC",
+      "artifact": "IPFS web bundle",
+      "hdr_strategy": "Runtime capability negotiation with deterministic SDR fallback"
+    },
+    {
+      "id": "macos",
+      "implementation": "native",
+      "path": "clients/macos",
+      "platforms": [
+        "macOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "Signed .app/.dmg",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "ios",
+      "implementation": "native",
+      "path": "clients/ios",
+      "platforms": [
+        "iOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "App Store/TestFlight build",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "ipados",
+      "implementation": "native",
+      "path": "clients/ipados",
+      "platforms": [
+        "iPadOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "App Store/TestFlight build",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "windows",
+      "implementation": "native",
+      "path": "clients/windows",
+      "platforms": [
+        "Windows"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Native Windows stack",
+      "artifact": "Signed installer",
+      "hdr_strategy": "DXGI/Media Foundation HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "android",
+      "implementation": "native",
+      "path": "clients/android",
+      "platforms": [
+        "Android"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Kotlin + NDK",
+      "artifact": "APK/AAB release",
+      "hdr_strategy": "Camera2/Codec HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "linux",
+      "implementation": "native",
+      "path": "clients/linux",
+      "platforms": [
+        "Linux"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Native Linux desktop stack",
+      "artifact": "Signed package",
+      "hdr_strategy": "Compositor-dependent HDR with deterministic SDR fallback"
+    }
+  ]
+}

@@ -8,6 +8,7 @@ publish = false
 
 [dependencies]
 anyhow = { workspace = true }
+blake3 = { workspace = true }
 clap = { workspace = true }
 futures-util = { workspace = true }
 hex = { workspace = true }
