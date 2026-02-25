@@ -43,6 +43,7 @@ jobs:
             "docs/client-fallback-drills.json"
             "docs/client-fallback-drill-results.json"
             "docs/client-release-manifest.json"
+            "docs/client-release-manifest-input.template.json"
             "docs/client-release-readiness-gates.json"
             "docs/client-rollback-manifest.json"
             "docs/fixtures/waivers/manifest.json"
@@ -135,12 +136,12 @@ jobs:
           assert payload.get("schema") == "kaigi-platform-contract/v1"
           assert payload.get("frozen_at") == "2026-02-15"
           contracts = payload.get("contracts")
-          assert isinstance(contracts, list) and len(contracts) == 9
+          assert isinstance(contracts, list) and len(contracts) == 10
           platforms = {contract.get("platform") for contract in contracts}
-          assert len(platforms) == 9
+          assert len(platforms) == 10
           required = {
               "WebChromium", "WebSafari", "WebFirefox",
-              "MacOS", "IOS", "IPadOS", "Windows", "Android", "Linux",
+              "MacOS", "IOS", "IPadOS", "VisionOS", "Windows", "Android", "Linux",
           }
           assert platforms == required
           PY
@@ -449,6 +450,14 @@ jobs:
             target/conformance/hardening-ga-smoke-report.json
             target/conformance/hardening-ga-smoke.log
           if-no-files-found: error
+      - name: Upload native-ops-handoff-package smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ops-handoff-package-smoke-evidence
+          path: |
+            target/conformance/native-ops-handoff-package-smoke-report.json
+            target/conformance/native-ops-handoff-package-smoke.log
+          if-no-files-found: error
       - name: Upload platform-contract smoke evidence
         uses: actions/upload-artifact@v4
         with:
@@ -504,6 +513,7 @@ jobs:
           path: |
             target/conformance/client-release-manifest-smoke-report.json
             target/conformance/client-release-manifest-smoke.log
+            target/conformance/client-release-manifest.generated.json
           if-no-files-found: error
       - name: Upload client-release-readiness-gates smoke evidence
         uses: actions/upload-artifact@v4
@@ -545,6 +555,15 @@ jobs:
           path: |
             target/conformance/conformance-evidence-bundle-report.json
             target/conformance/conformance-evidence-bundle.log
+          if-no-files-found: error
+      - name: Upload native ops handoff package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ops-handoff-package
+          path: |
+            target/conformance/native-ops-handoff-package-report.json
+            target/conformance/native-ops-handoff-package.log
+            target/conformance/native-ops-handoff-package.tar.gz
           if-no-files-found: error
 
   protocol-contract-matrix:
@@ -606,6 +625,7 @@ jobs:
           - macOS
           - iOS
           - iPadOS
+          - visionOS
           - Windows
           - Android
           - Linux
@@ -683,6 +703,7 @@ jobs:
           - OPS-004
           - OPS-005
           - OPS-006
+          - OPS-007
     steps:
       - uses: actions/checkout@v4
       - name: Ensure mandatory scenario ID exists
@@ -727,6 +748,7 @@ jobs:
             echo "- Release-playbook smoke evidence artifact: uploaded"
             echo "- Release-readiness smoke evidence artifact: uploaded"
             echo "- Hardening/GA smoke evidence artifact: uploaded"
+            echo "- Native ops handoff package smoke evidence artifact: uploaded"
             echo "- Platform-contract smoke evidence artifact: uploaded"
             echo "- Client-app-workspaces smoke evidence artifact: uploaded"
             echo "- Client-release-tracks smoke evidence artifact: uploaded"
@@ -739,4 +761,5 @@ jobs:
             echo "- Conformance coverage evidence artifact: uploaded"
             echo "- Conformance evidence index artifact: uploaded"
             echo "- Conformance evidence bundle artifact: uploaded"
+            echo "- Native ops handoff package artifact: uploaded"
           } >> "$GITHUB_STEP_SUMMARY"

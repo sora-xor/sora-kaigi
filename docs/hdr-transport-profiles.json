@@ -105,6 +105,23 @@
       "negotiation_policy": "require_sender_capture_and_receiver_render_support"
     },
     {
+      "platform": "VisionOS",
+      "hdr_enabled_on_supported_devices": true,
+      "hdr_color_primaries": "display_p3",
+      "hdr_transfer_function": "hlg",
+      "hdr_bit_depth": 10,
+      "static_metadata_required": true,
+      "static_metadata_fields": [
+        "mastering_display_primaries",
+        "mastering_display_luminance",
+        "max_cll",
+        "max_fall"
+      ],
+      "sdr_fallback_profile": "bt709_8bit",
+      "tone_mapping_strategy": "hable",
+      "negotiation_policy": "require_sender_capture_and_receiver_render_support"
+    },
+    {
       "platform": "Windows",
       "hdr_enabled_on_supported_devices": true,
       "hdr_color_primaries": "bt2020",

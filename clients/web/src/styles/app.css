@@ -1,0 +1,148 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --ink: #12223a;
+  --muted: #4a5f7f;
+  --brand: #0b7c8d;
+  --warn: #a85d00;
+  --error: #9b1c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at 20% -10%, #d3eef3 0%, var(--bg) 36%);
+  color: var(--ink);
+}
+
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h1 {
+  margin: 0 0 0.6rem;
+  font-size: 1.8rem;
+}
+
+.cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(18, 34, 58, 0.08);
+  padding: 1rem;
+}
+
+.card h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="url"] {
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #ced7e6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand);
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #36557d;
+}
+
+button.warn {
+  background: var(--warn);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.state {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge.connected {
+  background: #d6f5e3;
+  color: #0d6b3e;
+}
+
+.badge.degraded {
+  background: #ffecd2;
+  color: #8b4f00;
+}
+
+.badge.error {
+  background: #ffd7d7;
+  color: #8d1010;
+}
+
+.log {
+  max-height: 220px;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: "IBM Plex Mono", Menlo, monospace;
+  font-size: 0.78rem;
+}
+
+.log li {
+  padding: 0.2rem 0;
+  border-bottom: 1px dashed #d7deeb;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    padding: 0.7rem;
+  }
+}

@@ -6,9 +6,12 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import pathlib
 import re
 import sys
+import tempfile
+import time
 from typing import Dict, List, Tuple
 
 SCENARIO_ID_RE = re.compile(r"`([A-Z]+(?:-[A-Z]+)*-\d{3})`")
@@ -16,6 +19,8 @@ IGNORED_REPORT_BASENAMES = {
     "conformance-evidence-bundle-report.json",
     "conformance-coverage-report.json",
 }
+REPORT_PARSE_RETRY_ATTEMPTS = 3
+REPORT_PARSE_RETRY_DELAY_SECONDS = 0.05
 
 
 def utc_now_iso() -> str:
@@ -55,8 +60,36 @@ def extract_scenario_results(report_path: pathlib.Path) -> List[Tuple[str, str]]
     return rows
 
 
+def extract_scenario_results_with_retry(report_path: pathlib.Path) -> List[Tuple[str, str]]:
+    for attempt in range(REPORT_PARSE_RETRY_ATTEMPTS + 1):
+        try:
+            return extract_scenario_results(report_path)
+        except json.JSONDecodeError:
+            if attempt >= REPORT_PARSE_RETRY_ATTEMPTS:
+                raise
+            time.sleep(REPORT_PARSE_RETRY_DELAY_SECONDS)
+    raise RuntimeError(f"failed to parse report after retries: {report_path}")
+
+
+def atomic_write_text(path: pathlib.Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as tmp:
+        tmp.write(content)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+        temp_path = pathlib.Path(tmp.name)
+    temp_path.replace(path)
+
+
 def write_log(path: pathlib.Path, lines: List[str]) -> None:
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    atomic_write_text(path, "\n".join(lines) + "\n")
 
 
 def main() -> int:
@@ -70,6 +103,12 @@ def main() -> int:
         action="append",
         default=[],
         help="Scenario ID allowed to be missing without failing this coverage run.",
+    )
+    parser.add_argument(
+        "--allow-failed-scenario",
+        action="append",
+        default=[],
+        help="Scenario ID allowed to have only failing evidence without failing this coverage run.",
     )
     args = parser.parse_args()
 
@@ -88,7 +127,7 @@ def main() -> int:
         if report_path.name in IGNORED_REPORT_BASENAMES:
             continue
         try:
-            entries = extract_scenario_results(report_path)
+            entries = extract_scenario_results_with_retry(report_path)
         except Exception as exc:  # noqa: BLE001
             parse_errors.append(
                 {
@@ -106,6 +145,7 @@ def main() -> int:
             )
 
     allowed_missing = set(args.allow_missing_scenario)
+    allowed_failed = set(args.allow_failed_scenario)
     missing_scenarios = [
         sid
         for sid in required_scenarios
@@ -117,11 +157,15 @@ def main() -> int:
         if sid not in scenario_statuses and sid in allowed_missing
     ]
     failing_scenarios: List[Dict[str, object]] = []
+    waived_failing_scenarios: List[str] = []
     for scenario_id in required_scenarios:
         statuses = scenario_statuses.get(scenario_id, [])
         if not statuses:
             continue
         if not any(entry["status"] == "passed" for entry in statuses):
+            if scenario_id in allowed_failed:
+                waived_failing_scenarios.append(scenario_id)
+                continue
             failing_scenarios.append(
                 {
                     "scenario_id": scenario_id,
@@ -154,9 +198,11 @@ def main() -> int:
         "scenario_coverage": scenario_coverage,
         "missing_scenarios": missing_scenarios,
         "waived_missing_scenarios": waived_missing_scenarios,
+        "waived_failing_scenarios": sorted(waived_failing_scenarios),
         "failing_scenarios": failing_scenarios,
         "parse_errors": parse_errors,
         "allow_missing_scenarios": sorted(allowed_missing),
+        "allow_failed_scenarios": sorted(allowed_failed),
         "log_file": str(args.log_file),
     }
     if missing_scenarios or failing_scenarios or parse_errors:
@@ -169,6 +215,9 @@ def main() -> int:
     log_lines.append(f"Waived missing scenarios: {len(waived_missing_scenarios)}")
     if waived_missing_scenarios:
         log_lines.append("Waived missing IDs: " + ", ".join(waived_missing_scenarios))
+    log_lines.append(f"Waived failing scenarios: {len(waived_failing_scenarios)}")
+    if waived_failing_scenarios:
+        log_lines.append("Waived failing IDs: " + ", ".join(sorted(waived_failing_scenarios)))
     log_lines.append(f"Failing scenarios: {len(failing_scenarios)}")
     if failing_scenarios:
         log_lines.append(
@@ -178,7 +227,7 @@ def main() -> int:
     log_lines.append(f"Report parse errors: {len(parse_errors)}")
     log_lines.append(f"Coverage status: {report['status']}")
 
-    args.report_file.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    atomic_write_text(args.report_file, json.dumps(report, indent=2) + "\n")
     write_log(args.log_file, log_lines)
     print(f"Conformance coverage status: {report['status']}")
     print(f"Conformance coverage report: {args.report_file}")

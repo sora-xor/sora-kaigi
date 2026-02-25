@@ -8,6 +8,7 @@ pub enum TargetPlatform {
     MacOS,
     IOS,
     IPadOS,
+    VisionOS,
     Windows,
     Android,
     Linux,
@@ -26,13 +27,14 @@ impl TargetPlatform {
     }
 }
 
-pub const TARGET_PLATFORMS: [TargetPlatform; 9] = [
+pub const TARGET_PLATFORMS: [TargetPlatform; 10] = [
     TargetPlatform::WebChromium,
     TargetPlatform::WebSafari,
     TargetPlatform::WebFirefox,
     TargetPlatform::MacOS,
     TargetPlatform::IOS,
     TargetPlatform::IPadOS,
+    TargetPlatform::VisionOS,
     TargetPlatform::Windows,
     TargetPlatform::Android,
     TargetPlatform::Linux,

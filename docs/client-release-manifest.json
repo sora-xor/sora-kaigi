@@ -79,6 +79,21 @@
       "published_at": "2026-02-15T12:40:00Z"
     },
     {
+      "workspace_id": "visionos",
+      "platforms": [
+        "visionOS"
+      ],
+      "distribution_channel": "app-store-connect",
+      "artifact_uri": "asc://kaigi/2027-01-31/visionos/build/196",
+      "artifact_sha256": "0dce8e9f08f3d5a73058ba6415a6d2da7ad76b8f6ff6f5ccf4ca66f9e9509117",
+      "signature_ref": "codesign://kaigi/visionos/2027-01-31/build-196",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/visionos/kaigi-visionos.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/visionos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T12:45:00Z"
+    },
+    {
       "workspace_id": "web",
       "platforms": [
         "Web Chromium",

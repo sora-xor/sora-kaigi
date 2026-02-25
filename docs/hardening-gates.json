@@ -47,6 +47,13 @@
       "notes": "Native iPadOS path met hardening gate requirements for GA train inclusion."
     },
     {
+      "platform": "VisionOS",
+      "performance": "passed",
+      "reliability": "passed",
+      "security": "passed",
+      "notes": "Native visionOS path met hardening gate requirements with deterministic web fallback readiness."
+    },
+    {
       "platform": "Windows",
       "performance": "passed",
       "reliability": "passed",

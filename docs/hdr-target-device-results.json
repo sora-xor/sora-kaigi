@@ -112,6 +112,24 @@
       "notes": "Fallback behavior validated for unsupported HDR display path."
     },
     {
+      "platform": "VisionOS",
+      "case_id": "visionos-hdr-path",
+      "case_type": "hdr_path",
+      "status": "passed",
+      "test_environment": "visionOS native build on HDR-capable Apple Vision display path",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "HDR capture/render path validated for supported visionOS display pipeline."
+    },
+    {
+      "platform": "VisionOS",
+      "case_id": "visionos-sdr-fallback",
+      "case_type": "sdr_fallback_path",
+      "status": "passed",
+      "test_environment": "visionOS native build on SDR-only mirrored display path",
+      "executed_at": "2026-02-15T00:00:00Z",
+      "notes": "Deterministic SDR fallback verified when remote receiver does not advertise HDR render support."
+    },
+    {
       "platform": "Windows",
       "case_id": "windows-hdr-path",
       "case_type": "hdr_path",

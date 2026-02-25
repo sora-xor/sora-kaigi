@@ -8,7 +8,7 @@
         "Android"
       ],
       "ci_build_command": "./gradlew :app:bundleRelease",
-      "ci_smoke_command": "./gradlew :app:testReleaseUnitTest",
+      "ci_smoke_command": "bash scripts/run_native_android_smoke.sh --out-dir target/conformance",
       "artifact_kind": "play-aab",
       "distribution_channel": "google-play",
       "release_channels": [
@@ -25,8 +25,8 @@
       "platforms": [
         "iOS"
       ],
-      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIOS archive",
-      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiIOSTests",
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIOS -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform ios --out-dir target/conformance --skip-xcodegen",
       "artifact_kind": "app-store-ipa",
       "distribution_channel": "app-store-connect",
       "release_channels": [
@@ -43,8 +43,8 @@
       "platforms": [
         "iPadOS"
       ],
-      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIPadOS archive",
-      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiIPadOSTests",
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiIPadOS -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform ipados --out-dir target/conformance --skip-xcodegen",
       "artifact_kind": "app-store-ipa",
       "distribution_channel": "app-store-connect",
       "release_channels": [
@@ -62,7 +62,7 @@
         "Linux"
       ],
       "ci_build_command": "cargo build --release -p kaigi-linux-client",
-      "ci_smoke_command": "cargo test -p kaigi-linux-client --release",
+      "ci_smoke_command": "bash scripts/run_linux_client_smoke.sh --out-dir target/conformance",
       "artifact_kind": "signed-linux-package",
       "distribution_channel": "signed-package-repo",
       "release_channels": [
@@ -79,10 +79,28 @@
       "platforms": [
         "macOS"
       ],
-      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiMacOS archive",
-      "ci_smoke_command": "xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiMacOSTests",
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiMacOS -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform macos --out-dir target/conformance --skip-xcodegen",
       "artifact_kind": "signed-dmg",
       "distribution_channel": "apple-notarized-distribution",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "visionos",
+      "platforms": [
+        "visionOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiVisionOS -destination 'generic/platform=visionOS Simulator' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform visionos --out-dir target/conformance --skip-xcodegen",
+      "artifact_kind": "app-store-ipa",
+      "distribution_channel": "app-store-connect",
       "release_channels": [
         "alpha",
         "beta",
@@ -99,8 +117,8 @@
         "Web Safari",
         "Web Firefox"
       ],
-      "ci_build_command": "npm run build:web",
-      "ci_smoke_command": "npm run test:web-smoke",
+      "ci_build_command": "npm --prefix clients/web run build",
+      "ci_smoke_command": "bash scripts/run_web_client_smoke.sh --out-dir target/conformance",
       "artifact_kind": "ipfs-web-bundle",
       "distribution_channel": "ipfs",
       "release_channels": [
@@ -116,8 +134,8 @@
       "platforms": [
         "Windows"
       ],
-      "ci_build_command": "msbuild Kaigi.Windows.sln /p:Configuration=Release",
-      "ci_smoke_command": "vstest.console.exe Kaigi.Windows.Tests.dll",
+      "ci_build_command": "bash scripts/run_windows_client_smoke.sh --out-dir target/conformance --build-only",
+      "ci_smoke_command": "bash scripts/run_windows_client_smoke.sh --out-dir target/conformance",
       "artifact_kind": "signed-msi",
       "distribution_channel": "winget-msi",
       "release_channels": [

@@ -9,6 +9,7 @@
     "MacOS",
     "IOS",
     "IPadOS",
+    "VisionOS",
     "Windows",
     "Android",
     "Linux"

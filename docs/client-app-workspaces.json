@@ -52,6 +52,18 @@
       "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
     },
     {
+      "id": "visionos",
+      "implementation": "native",
+      "path": "clients/visionos",
+      "platforms": [
+        "visionOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "App Store/TestFlight build",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
       "id": "windows",
       "implementation": "native",
       "path": "clients/windows",
@@ -59,7 +71,7 @@
         "Windows"
       ],
       "web_fallback_workspace": "web",
-      "build_system": "Native Windows stack",
+      "build_system": "WinUI 3 + C#",
       "artifact": "Signed installer",
       "hdr_strategy": "DXGI/Media Foundation HDR when supported, SDR fallback otherwise"
     },
@@ -83,7 +95,7 @@
         "Linux"
       ],
       "web_fallback_workspace": "web",
-      "build_system": "Native Linux desktop stack",
+      "build_system": "Rust + GTK4",
       "artifact": "Signed package",
       "hdr_strategy": "Compositor-dependent HDR with deterministic SDR fallback"
     }

@@ -10,7 +10,7 @@ import sys
 
 ALLOWED_CAPTURE_TARGETS = {"display", "window", "browser_tab"}
 ALLOWED_AUDIO_MODES = {"none", "tab", "system_loopback"}
-MOBILE_PLATFORMS = {"IOS", "IPadOS"}
+MOBILE_PLATFORMS = {"IOS", "IPadOS", "VisionOS"}
 
 
 def load_json(path: pathlib.Path) -> dict:

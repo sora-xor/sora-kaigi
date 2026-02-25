@@ -14,15 +14,17 @@ use futures_util::{SinkExt as _, StreamExt as _};
 use kaigi_wire::{
     AnonHelloFrame, AnonRosterEntry, AnonRosterFrame, ChatFrame, DeviceCapabilityFrame,
     E2EEKeyEpochFrame, EncryptedControlFrame, ErrorFrame, EscrowAckFrame, EscrowProofFrame,
-    FrameDecoder, GroupKeyUpdateFrame, HelloFrame, KaigiFrame, KeyRotationAckFrame,
+    FrameDecoder, GroupKeyUpdateFrame, HelloFrame, KaigiFrame,
     MAX_ANON_PARTICIPANT_HANDLE_LEN, MAX_ESCROW_ID_LEN, MAX_ESCROW_PROOF_HEX_LEN,
     MediaProfileKind, MediaProfileNegotiationFrame, ModerationAction, ModerationFrame,
     ModerationSignedFrame, ModerationTarget, PROTOCOL_VERSION, ParticipantLeftFrame,
-    ParticipantPresenceDeltaFrame, ParticipantSnapshot, ParticipantStateFrame, PaymentAckFrame,
-    PermissionsSnapshotFrame, RecordingNoticeFrame, RecordingState, RoleChangeEntry,
-    RoleGrantFrame, RoleKind, RoleRevokeFrame, RoomConfigFrame, RoomEventFrame, RosterEntry,
-    RosterFrame, SessionPolicyFrame, encode_framed,
+    ParticipantPresenceDeltaFrame, ParticipantSnapshot, PaymentAckFrame, PermissionsSnapshotFrame,
+    RecordingNoticeFrame, RecordingState, RoleChangeEntry, RoleGrantFrame, RoleKind,
+    RoleRevokeFrame, RoomConfigFrame, RoomEventFrame, RosterEntry, RosterFrame,
+    SessionPolicyFrame, encode_framed,
 };
+#[cfg(test)]
+use kaigi_wire::{KeyRotationAckFrame, ParticipantStateFrame};
 use norito::{
     decode_from_bytes,
     derive::{NoritoDeserialize, NoritoSerialize},
@@ -956,10 +958,60 @@ async fn handle_frame(
                         None,
                         None,
                     )
+                } else if let Some(reason) = validate_join_allowed(room, conn_id, &hello.participant_id)
+                {
+                    (
+                        ParticipantSnapshot {
+                            at_ms: now_ms(),
+                            participant_id: String::new(),
+                            display_name: None,
+                            mic_enabled: false,
+                            video_enabled: false,
+                            screen_share_enabled: false,
+                        },
+                        false,
+                        Some(reason),
+                        None,
+                        None,
+                    )
                 } else {
-                    if let Some(reason) =
-                        validate_join_allowed(room, conn_id, &hello.participant_id)
-                    {
+                    if room.host_conn_id.is_none() {
+                        room.host_conn_id = Some(conn_id);
+                        room.host_role_owner = Some(hello.participant_id.clone());
+                        sync_active_co_host_bindings(room);
+                        room.permissions_epoch = room.permissions_epoch.saturating_add(1);
+                    }
+                    let already_joined = room
+                        .participants
+                        .get(&conn_id)
+                        .is_some_and(|participant| participant.state.hello_seen);
+                    let has_moderation_role =
+                        conn_or_participant_can_moderate(room, conn_id, &hello.participant_id);
+                    let route_to_waiting_room = !already_joined
+                        && room.waiting_room_enabled
+                        && room.host_conn_id.is_some()
+                        && !has_moderation_role;
+                    let joined_state = {
+                        let participant = room
+                            .participants
+                            .get_mut(&conn_id)
+                            .ok_or_else(|| anyhow!("participant missing"))?;
+                        participant.state.participant_id = hello.participant_id.clone();
+                        participant.state.display_name = hello.display_name.clone();
+                        participant.state.participant_handle = None;
+                        participant.state.x25519_pubkey_hex = None;
+                        participant.state.x25519_epoch = 0;
+                        participant.state.anonymous_mode = false;
+                        participant.state.mic_enabled = hello.mic_enabled;
+                        participant.state.video_enabled = hello.video_enabled;
+                        participant.state.screen_share_enabled = hello.screen_share_enabled;
+                        participant.state.waiting_room_pending = route_to_waiting_room;
+                        participant.state.hello_seen = !route_to_waiting_room;
+                        participant.state.last_escrow_proof_at_ms = None;
+                        participant.state.escrow_id = None;
+                        participant.state.clone()
+                    };
+                    if route_to_waiting_room {
                         (
                             ParticipantSnapshot {
                                 at_ms: now_ms(),
@@ -970,81 +1022,28 @@ async fn handle_frame(
                                 screen_share_enabled: false,
                             },
                             false,
-                            Some(reason),
                             None,
+                            Some(format!(
+                                "waiting room: pending admission for participant_id={}",
+                                hello.participant_id
+                            )),
                             None,
                         )
                     } else {
-                        if room.host_conn_id.is_none() {
-                            room.host_conn_id = Some(conn_id);
-                            room.host_role_owner = Some(hello.participant_id.clone());
-                            sync_active_co_host_bindings(room);
+                        room.e2ee_epochs.entry(conn_id).or_insert(0);
+                        if restore_reserved_roles_on_join(room, conn_id, &hello.participant_id) {
                             room.permissions_epoch = room.permissions_epoch.saturating_add(1);
                         }
-                        let already_joined = room
-                            .participants
-                            .get(&conn_id)
-                            .is_some_and(|participant| participant.state.hello_seen);
-                        let has_moderation_role =
-                            conn_or_participant_can_moderate(room, conn_id, &hello.participant_id);
-                        let route_to_waiting_room = !already_joined
-                            && room.waiting_room_enabled
-                            && room.host_conn_id.is_some()
-                            && !has_moderation_role;
-                        let joined_state = {
-                            let participant = room
-                                .participants
-                                .get_mut(&conn_id)
-                                .ok_or_else(|| anyhow!("participant missing"))?;
-                            participant.state.participant_id = hello.participant_id.clone();
-                            participant.state.display_name = hello.display_name.clone();
-                            participant.state.participant_handle = None;
-                            participant.state.x25519_pubkey_hex = None;
-                            participant.state.x25519_epoch = 0;
-                            participant.state.anonymous_mode = false;
-                            participant.state.mic_enabled = hello.mic_enabled;
-                            participant.state.video_enabled = hello.video_enabled;
-                            participant.state.screen_share_enabled = hello.screen_share_enabled;
-                            participant.state.waiting_room_pending = route_to_waiting_room;
-                            participant.state.hello_seen = !route_to_waiting_room;
-                            participant.state.last_escrow_proof_at_ms = None;
-                            participant.state.escrow_id = None;
-                            participant.state.clone()
+                        room.presence_sequence = room.presence_sequence.saturating_add(1);
+                        let snapshot = participant_snapshot_from_state(&joined_state, now_ms());
+                        let presence_delta = ParticipantPresenceDeltaFrame {
+                            at_ms: now_ms(),
+                            sequence: room.presence_sequence,
+                            joined: vec![snapshot.clone()],
+                            left: Vec::new(),
+                            role_changes: Vec::new(),
                         };
-                        if route_to_waiting_room {
-                            (
-                                ParticipantSnapshot {
-                                    at_ms: now_ms(),
-                                    participant_id: String::new(),
-                                    display_name: None,
-                                    mic_enabled: false,
-                                    video_enabled: false,
-                                    screen_share_enabled: false,
-                                },
-                                false,
-                                None,
-                                Some(format!(
-                                    "waiting room: pending admission for participant_id={}",
-                                    hello.participant_id
-                                )),
-                                None,
-                            )
-                        } else {
-                            room.e2ee_epochs.entry(conn_id).or_insert(0);
-                            if restore_reserved_roles_on_join(room, conn_id, &hello.participant_id) {
-                                room.permissions_epoch = room.permissions_epoch.saturating_add(1);
-                            }
-                            room.presence_sequence = room.presence_sequence.saturating_add(1);
-                            let snapshot = participant_snapshot_from_state(&joined_state, now_ms());
-                            let presence_delta = ParticipantPresenceDeltaFrame {
-                                at_ms: now_ms(),
-                                sequence: room.presence_sequence,
-                                joined: vec![snapshot.clone()],
-                                left: Vec::new(),
-                                role_changes: Vec::new(),
-                            };
-                            (snapshot, false, None, None, Some(presence_delta))
-                        }
+                        (snapshot, false, None, None, Some(presence_delta))
                     }
                 }
             };
@@ -1702,16 +1701,16 @@ async fn handle_frame(
                         }
                     }
                 }
-                if error.is_none() {
-                    if let Err(clock_err) = enforce_signed_action_clock(
+                if error.is_none()
+                    && let Err(clock_err) = enforce_signed_action_clock(
                         room,
                         "key_rotation_ack",
                         &ack.participant_id,
                         "received_at_ms",
                         ack.received_at_ms,
-                    ) {
-                        error = Some(clock_err);
-                    }
+                    )
+                {
+                    error = Some(clock_err);
                 }
                 if error.is_none() {
                     room.key_rotation_ack_epochs.insert(conn_id, ack.ack_epoch);
@@ -2989,12 +2988,12 @@ fn enforce_signed_action_clock(
     }
 
     let key = signed_action_clock_key(action_tag, signer_id);
-    if let Some(last_seen) = room.signed_action_clock_by_signer.get(&key) {
-        if timestamp_ms <= *last_seen {
-            return Err(format!(
-                "{action_tag} {timestamp_label} must increase for signer {signer_id}: last={last_seen} got={timestamp_ms} (replay/stale rejected)"
-            ));
-        }
+    if let Some(last_seen) = room.signed_action_clock_by_signer.get(&key)
+        && timestamp_ms <= *last_seen
+    {
+        return Err(format!(
+            "{action_tag} {timestamp_label} must increase for signer {signer_id}: last={last_seen} got={timestamp_ms} (replay/stale rejected)"
+        ));
     }
 
     room.signed_action_clock_by_signer.insert(key, timestamp_ms);
@@ -4325,12 +4324,10 @@ mod tests {
         while let Ok(message) = alice_rx.try_recv() {
             match message {
                 binary @ Message::Binary(_) => {
-                    if let KaigiFrame::Error(ErrorFrame { message }) =
-                        decode_message_frame(binary)
+                    if let KaigiFrame::Error(ErrorFrame { message }) = decode_message_frame(binary)
+                        && message.contains("removed by host: alice@sora")
                     {
-                        if message.contains("removed by host: alice@sora") {
-                            saw_kick_error = true;
-                        }
+                        saw_kick_error = true;
                     }
                 }
                 Message::Close(_) => {

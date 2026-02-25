@@ -8,7 +8,7 @@ import pathlib
 import re
 import sys
 
-NATIVE_PLATFORMS = ["macOS", "iOS", "iPadOS", "Windows", "Android", "Linux"]
+NATIVE_PLATFORMS = ["macOS", "iOS", "iPadOS", "visionOS", "Windows", "Android", "Linux"]
 WEB_PLATFORMS = ["Web Chromium", "Web Safari", "Web Firefox"]
 
 
@@ -52,6 +52,10 @@ def validate_release_playbook(text: str) -> None:
             "## Scope",
             "## Preconditions",
             "## Artifact Build and Signing",
+            "## Native Pipeline Stages",
+            "### Stage 1: Unsigned CI (Default)",
+            "### Stage 1A: Ops Handoff Package (Required Before Tagging)",
+            "### Stage 2: Signed Distribution (Credentialed)",
             "## Native Release Tracks",
             "## IPFS Web Release",
             "## Launch Checklist",
@@ -63,6 +67,10 @@ def validate_release_playbook(text: str) -> None:
     ensure_platform_mentions(text, WEB_PLATFORMS, name="release-playbook")
     if "IPFS" not in text:
         raise RuntimeError("release-playbook: missing IPFS release coverage")
+    if "scripts/run_native_ops_handoff_package.sh" not in text:
+        raise RuntimeError("release-playbook: missing native ops handoff command")
+    if "native-ops-handoff-package.tar.gz" not in text:
+        raise RuntimeError("release-playbook: missing native ops handoff artifact reference")
 
 
 def validate_rollback_playbook(text: str) -> None:
@@ -72,6 +80,9 @@ def validate_rollback_playbook(text: str) -> None:
             "# Rollback Playbook",
             "## Trigger Conditions",
             "## Decision and Ownership",
+            "## Rollback Pipeline Stages",
+            "### Stage 1: Unsigned Verification (Default)",
+            "### Stage 2: Credentialed Rollback Publish",
             "## Native Rollback Tracks",
             "## IPFS Web Rollback",
             "## Incident Communication",

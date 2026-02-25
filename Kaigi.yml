@@ -1,0 +1,143 @@
+name: Kaigi
+options:
+  createIntermediateGroups: true
+  defaultConfig: Debug
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    MARKETING_VERSION: 1.0
+    CURRENT_PROJECT_VERSION: 1
+
+targets:
+  KaigiMacOS:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: clients/apple/Shared
+        excludes:
+          - Resources/LaunchScreen.storyboard
+      - path: clients/apple/macOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.macos
+        PRODUCT_NAME: KaigiMacOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi Mac
+        INFOPLIST_KEY_NSCameraUsageDescription: "Kaigi needs camera access for meetings."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+        INFOPLIST_KEY_NSScreenCaptureDescription: "Kaigi needs screen recording permission for screen sharing."
+
+  KaigiMacOSTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: clients/apple/tests/macos
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiMacOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.macos.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  KaigiIOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/Shared
+      - path: clients/apple/iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios
+        PRODUCT_NAME: KaigiIOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi iPhone
+        INFOPLIST_KEY_NSCameraUsageDescription: "Kaigi needs camera access for meetings."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+        TARGETED_DEVICE_FAMILY: "1"
+
+  KaigiIOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests/ios
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+
+  KaigiIPadOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/Shared
+      - path: clients/apple/iPadOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ipados
+        PRODUCT_NAME: KaigiIPadOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi iPad
+        INFOPLIST_KEY_NSCameraUsageDescription: "Kaigi needs camera access for meetings."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+        TARGETED_DEVICE_FAMILY: "2"
+
+  KaigiIPadOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests/ipados
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiIPadOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ipados.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "2"
+
+  KaigiVisionOS:
+    type: application
+    platform: visionOS
+    deploymentTarget: "1.0"
+    sources:
+      - path: clients/apple/Shared
+        excludes:
+          - Resources/LaunchScreen.storyboard
+      - path: clients/apple/visionOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.visionos
+        PRODUCT_NAME: KaigiVisionOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi Vision
+        INFOPLIST_KEY_NSCameraUsageDescription: "Kaigi needs camera access for meetings."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+
+  KaigiVisionOSTests:
+    type: bundle.unit-test
+    platform: visionOS
+    deploymentTarget: "1.0"
+    sources:
+      - path: clients/apple/tests/visionos
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiVisionOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.visionos.tests
+        GENERATE_INFOPLIST_FILE: YES

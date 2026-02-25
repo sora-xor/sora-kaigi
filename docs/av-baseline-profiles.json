@@ -105,6 +105,23 @@
       "notes": "AVAudioSession route control and microphone permission are required."
     },
     {
+      "platform": "VisionOS",
+      "capture_api": "avfoundation",
+      "playback_api": "coreaudio",
+      "permission_flow": "os_settings_plus_runtime_prompt",
+      "audio_input_required": true,
+      "audio_output_required": true,
+      "microphone_permission_required": true,
+      "echo_cancellation_default": true,
+      "noise_suppression_default": true,
+      "automatic_gain_control_default": true,
+      "default_join_mic_enabled": false,
+      "default_join_camera_enabled": false,
+      "default_join_screen_share_enabled": false,
+      "speaker_route_control_supported": true,
+      "notes": "AVAudioSession route control and microphone permission are required on visionOS."
+    },
+    {
       "platform": "Windows",
       "capture_api": "media_foundation",
       "playback_api": "wasapi",

@@ -1,0 +1,317 @@
+name: Native GA Readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_ops_handoff_bundle:
+        description: "Also generate/upload the native ops handoff bundle (slow)"
+        required: false
+        default: false
+        type: boolean
+  pull_request:
+    paths:
+      - clients/README.md
+      - clients/apple/**
+      - clients/android/**
+      - clients/ios/**
+      - clients/ipados/**
+      - clients/linux/**
+      - clients/macos/**
+      - clients/visionos/**
+      - clients/web/**
+      - clients/windows/**
+      - crates/kaigi-linux-client/**
+      - Kaigi.yml
+      - Kaigi.xcodeproj/**
+      - Kaigi.xcworkspace/**
+      - gradlew
+      - scripts/run_native_*smoke.sh
+      - scripts/run_web_client_smoke.sh
+      - scripts/run_linux_client_smoke.sh
+      - scripts/run_windows_client_smoke.sh
+      - scripts/run_native_ops_handoff_package.sh
+      - scripts/run_native_ops_handoff_package_smoke.sh
+      - scripts/run_conformance_evidence_bundle.sh
+      - scripts/run_conformance_evidence_index.sh
+      - scripts/run_conformance_coverage_check.sh
+      - scripts/run_client_app_workspaces_smoke.sh
+      - scripts/run_client_fallback_drills_smoke.sh
+      - scripts/run_client_fallback_drill_results_smoke.sh
+      - scripts/run_client_release_tracks_smoke.sh
+      - scripts/run_client_release_playbook_alignment_smoke.sh
+      - scripts/run_client_release_readiness_gates_smoke.sh
+      - scripts/run_client_rollback_manifest_smoke.sh
+      - scripts/run_client_release_manifest_smoke.sh
+      - scripts/generate_client_release_manifest.py
+      - scripts/validate_client_release_manifest.py
+      - scripts/generate_conformance_evidence_index.py
+      - scripts/validate_conformance_coverage.py
+      - scripts/run_release_readiness_smoke.sh
+      - scripts/run_hardening_ga_smoke.sh
+      - scripts/validate_client_app_workspaces.py
+      - scripts/validate_client_fallback_drills.py
+      - scripts/validate_client_fallback_drill_results.py
+      - scripts/validate_client_release_tracks.py
+      - scripts/validate_client_release_playbook_alignment.py
+      - scripts/validate_client_release_readiness_gates.py
+      - scripts/validate_client_rollback_manifest.py
+      - scripts/validate_hardening_gates.py
+      - scripts/validate_ga_approvals.py
+      - docs/client-release-tracks.json
+      - docs/client-app-workspaces.json
+      - docs/client-fallback-drills.json
+      - docs/client-fallback-drill-results.json
+      - docs/client-release-manifest.json
+      - docs/client-release-manifest-input.template.json
+      - docs/client-release-readiness-gates.json
+      - docs/client-rollback-manifest.json
+      - docs/hardening-gates.json
+      - docs/ga-approvals.json
+      - docs/release-playbook.md
+      - docs/rollback-playbook.md
+      - .github/workflows/native-ga-readiness.yml
+  push:
+    branches:
+      - master
+    paths:
+      - clients/README.md
+      - clients/apple/**
+      - clients/android/**
+      - clients/ios/**
+      - clients/ipados/**
+      - clients/linux/**
+      - clients/macos/**
+      - clients/visionos/**
+      - clients/web/**
+      - clients/windows/**
+      - crates/kaigi-linux-client/**
+      - Kaigi.yml
+      - Kaigi.xcodeproj/**
+      - Kaigi.xcworkspace/**
+      - gradlew
+      - scripts/run_native_*smoke.sh
+      - scripts/run_web_client_smoke.sh
+      - scripts/run_linux_client_smoke.sh
+      - scripts/run_windows_client_smoke.sh
+      - scripts/run_native_ops_handoff_package.sh
+      - scripts/run_native_ops_handoff_package_smoke.sh
+      - scripts/run_conformance_evidence_bundle.sh
+      - scripts/run_conformance_evidence_index.sh
+      - scripts/run_conformance_coverage_check.sh
+      - scripts/run_client_app_workspaces_smoke.sh
+      - scripts/run_client_fallback_drills_smoke.sh
+      - scripts/run_client_fallback_drill_results_smoke.sh
+      - scripts/run_client_release_tracks_smoke.sh
+      - scripts/run_client_release_playbook_alignment_smoke.sh
+      - scripts/run_client_release_readiness_gates_smoke.sh
+      - scripts/run_client_rollback_manifest_smoke.sh
+      - scripts/run_client_release_manifest_smoke.sh
+      - scripts/generate_client_release_manifest.py
+      - scripts/validate_client_release_manifest.py
+      - scripts/generate_conformance_evidence_index.py
+      - scripts/validate_conformance_coverage.py
+      - scripts/run_release_readiness_smoke.sh
+      - scripts/run_hardening_ga_smoke.sh
+      - scripts/validate_client_app_workspaces.py
+      - scripts/validate_client_fallback_drills.py
+      - scripts/validate_client_fallback_drill_results.py
+      - scripts/validate_client_release_tracks.py
+      - scripts/validate_client_release_playbook_alignment.py
+      - scripts/validate_client_release_readiness_gates.py
+      - scripts/validate_client_rollback_manifest.py
+      - scripts/validate_hardening_gates.py
+      - scripts/validate_ga_approvals.py
+      - docs/client-release-tracks.json
+      - docs/client-app-workspaces.json
+      - docs/client-fallback-drills.json
+      - docs/client-fallback-drill-results.json
+      - docs/client-release-manifest.json
+      - docs/client-release-manifest-input.template.json
+      - docs/client-release-readiness-gates.json
+      - docs/client-rollback-manifest.json
+      - docs/hardening-gates.json
+      - docs/ga-approvals.json
+      - docs/release-playbook.md
+      - docs/rollback-playbook.md
+      - .github/workflows/native-ga-readiness.yml
+
+jobs:
+  web-linux-client-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: clients/web/package-lock.json
+      - name: Run Web + Linux client smoke gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_web_client_smoke.sh --out-dir target/conformance
+          bash scripts/run_linux_client_smoke.sh --out-dir target/conformance
+      - name: Audit Web client dependencies (moderate+)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix clients/web audit --audit-level=moderate
+      - name: Upload Web + Linux client smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-linux-client-smoke-evidence
+          path: |
+            target/conformance/web-client-smoke-report.json
+            target/conformance/web-client-smoke.log
+            target/conformance/linux-client-smoke-report.json
+            target/conformance/linux-client-smoke.log
+          if-no-files-found: error
+
+  android-native-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run Android native smoke gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_native_android_smoke.sh --out-dir target/conformance
+      - name: Upload Android native smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-android-smoke-evidence
+          path: |
+            target/conformance/native-android-smoke-report.json
+            target/conformance/native-android-smoke.log
+          if-no-files-found: error
+
+  apple-native-gates:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Apple native smoke gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          SKIP_VISIONOS=1 bash scripts/run_native_apple_smoke.sh --out-dir target/conformance --skip-xcodegen
+      - name: Upload Apple native smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-apple-smoke-evidence
+          path: |
+            target/conformance/native-apple-smoke-report.json
+            target/conformance/native-apple-smoke.log
+          if-no-files-found: error
+
+  windows-client-gates:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run Windows client smoke gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_windows_client_smoke.sh --out-dir target/conformance
+      - name: Upload Windows client smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-client-smoke-evidence
+          path: |
+            target/conformance/windows-client-smoke-report.json
+            target/conformance/windows-client-smoke.log
+          if-no-files-found: error
+
+  native-release-contract-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate native release-track/fallback/readiness contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_client_release_tracks_smoke.sh
+          bash scripts/run_client_fallback_drills_smoke.sh
+          bash scripts/run_client_fallback_drill_results_smoke.sh
+          bash scripts/run_client_release_manifest_smoke.sh
+          bash scripts/run_client_release_readiness_gates_smoke.sh
+          bash scripts/run_client_rollback_manifest_smoke.sh
+          bash scripts/run_release_readiness_smoke.sh
+          bash scripts/run_hardening_ga_smoke.sh
+      - name: Generate native ops handoff package (workflow_dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.include_ops_handoff_bundle == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_native_ops_handoff_package.sh --out-dir target/conformance --metadata docs/client-release-manifest-input.template.json
+      - name: Upload native release contract evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-release-contract-evidence
+          path: |
+            target/conformance/client-release-tracks-smoke-report.json
+            target/conformance/client-release-tracks-smoke.log
+            target/conformance/client-fallback-drills-smoke-report.json
+            target/conformance/client-fallback-drills-smoke.log
+            target/conformance/client-fallback-drill-results-smoke-report.json
+            target/conformance/client-fallback-drill-results-smoke.log
+            target/conformance/client-release-manifest-smoke-report.json
+            target/conformance/client-release-manifest-smoke.log
+            target/conformance/client-release-manifest.generated.json
+            target/conformance/client-release-readiness-gates-smoke-report.json
+            target/conformance/client-release-readiness-gates-smoke.log
+            target/conformance/client-rollback-manifest-smoke-report.json
+            target/conformance/client-rollback-manifest-smoke.log
+            target/conformance/release-readiness-smoke-report.json
+            target/conformance/release-readiness-smoke.log
+            target/conformance/release-readiness-report.json
+            target/conformance/release-readiness.log
+            target/conformance/hardening-ga-smoke-report.json
+            target/conformance/hardening-ga-smoke.log
+          if-no-files-found: error
+      - name: Upload native ops handoff package evidence
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.include_ops_handoff_bundle == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ops-handoff-package
+          path: |
+            target/conformance/native-ops-handoff-package-report.json
+            target/conformance/native-ops-handoff-package.log
+            target/conformance/native-ops-handoff-package.tar.gz
+          if-no-files-found: error
+
+  native-ga-summary:
+    needs:
+      - web-linux-client-gates
+      - android-native-gates
+      - apple-native-gates
+      - windows-client-gates
+      - native-release-contract-gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish native GA summary
+        run: |
+          {
+            echo "## Native GA Readiness Summary"
+            echo "- Web client smoke gates: passed"
+            echo "- Linux client smoke gates: passed"
+            echo "- Web dependency audit gate (moderate+): passed"
+            echo "- Android native smoke gates: passed"
+            echo "- Apple native smoke gates (macOS, iOS, iPadOS): passed"
+            echo "- visionOS smoke gates: intentionally skipped in CI by policy"
+            echo "- Windows client smoke gates: passed"
+            echo "- Native release/fallback/readiness contract gates: passed"
+            echo "- Hardening + GA approval smoke gates (OPS-005/OPS-006): passed"
+            echo "- Release-readiness smoke gates (OPS-003/OPS-004): passed"
+            echo "- Optional workflow_dispatch handoff bundle path is available (include_ops_handoff_bundle=true)"
+            echo "- Signing/store upload stages intentionally not executed by this workflow"
+          } >> "$GITHUB_STEP_SUMMARY"

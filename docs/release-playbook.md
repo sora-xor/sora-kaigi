@@ -1,6 +1,6 @@
 # Release Playbook
 
-Last updated: 2026-02-15
+Last updated: 2026-02-20
 
 ## Scope
 
@@ -21,6 +21,48 @@ fallback for `sora-kaigi`.
 3. Generate checksums, software bill of materials, and signatures for every artifact.
 4. Publish signed release manifest with artifact hashes and rollback pointer references.
 
+## Native Pipeline Stages
+
+### Stage 1: Unsigned CI (Default)
+
+- This stage is credential-free and must pass on every PR/release branch.
+- Android command: `bash scripts/run_native_android_smoke.sh --out-dir target/conformance`
+- Apple command: `bash scripts/run_native_apple_smoke.sh --out-dir target/conformance --skip-xcodegen`
+- Apple CI default: visionOS smoke is skipped when `CI=true` (set `SKIP_VISIONOS=0` to enable it in a credentialed Apple environment).
+- Web command: `bash scripts/run_web_client_smoke.sh --out-dir target/conformance`
+- Linux command: `bash scripts/run_linux_client_smoke.sh --out-dir target/conformance`
+- Windows command: `bash scripts/run_windows_client_smoke.sh --out-dir target/conformance`
+- Contract/readiness commands:
+  - `bash scripts/run_client_release_tracks_smoke.sh`
+  - `bash scripts/run_client_fallback_drills_smoke.sh`
+  - `bash scripts/run_client_fallback_drill_results_smoke.sh`
+  - `bash scripts/run_client_release_manifest_smoke.sh`
+  - `bash scripts/run_client_release_readiness_gates_smoke.sh`
+  - `bash scripts/run_client_rollback_manifest_smoke.sh`
+
+### Stage 1A: Ops Handoff Package (Required Before Tagging)
+
+- Owner: native release owner.
+- Reviewers: operations owner + incident commander backup.
+- Build an explicit handoff package from CI evidence and release metadata using one command:
+  - `bash scripts/run_native_ops_handoff_package.sh --out-dir target/conformance --metadata docs/client-release-manifest-input.template.json`
+  - Optional fast rerun (if evidence already exists): `bash scripts/run_native_ops_handoff_package.sh --out-dir target/conformance --metadata docs/client-release-manifest-input.template.json --skip-conformance-refresh`
+- Mandatory handoff artifacts to share with ops:
+  - `target/conformance/native-ops-handoff-package/`
+  - `target/conformance/native-ops-handoff-package.tar.gz`
+  - `target/conformance/native-ops-handoff-package-report.json`
+- Required acknowledgment: ops owner confirms these artifacts for the release train before GA tagging.
+
+### Stage 2: Signed Distribution (Credentialed)
+
+- This stage is disabled by default in shared CI and local developer runs.
+- Enable only in a credentialed release environment with explicit release-owner approval.
+- Required credential classes:
+  - Apple signing identities + provisioning + notarization credentials
+  - Play Console service credentials + release signing keys
+- Store-upload and notarization actions are explicitly out-of-scope for Stage 1 and must not run
+  unless credential gates are intentionally opened.
+
 ## Client Release Track Contract
 
 | Workspace ID | Platforms | Artifact Kind | Distribution Channel | Signing Required | HDR Validation Required |
@@ -30,10 +72,23 @@ fallback for `sora-kaigi`.
 | ipados | iPadOS | app-store-ipa | app-store-connect | true | true |
 | linux | Linux | signed-linux-package | signed-package-repo | true | true |
 | macos | macOS | signed-dmg | apple-notarized-distribution | true | true |
+| visionos | visionOS | app-store-ipa | app-store-connect | true | true |
 | web | Web Chromium, Web Safari, Web Firefox | ipfs-web-bundle | ipfs | false | true |
 | windows | Windows | signed-msi | winget-msi | true | true |
 
 ## Native Release Tracks
+
+## Runtime Observability Requirements
+
+- Native runtimes emit structured session telemetry hooks:
+  - Apple/Android: `MeetingTelemetrySink`
+  - Windows: `IMeetingTelemetrySink`
+  - Linux: `MeetingTelemetrySink`
+- Web runtime (`useMeetingSession`) exposes an equivalent `MeetingTelemetrySink` contract used by
+  native fallback drill orchestration.
+- Mandatory event categories for GA: `connection_lifecycle`, `fallback_lifecycle`, and
+  `policy_failure`.
+- Fallback drill verification must include captured `fallback_recovered` `rto_ms` values.
 
 ### macOS
 
@@ -49,6 +104,11 @@ fallback for `sora-kaigi`.
 
 - Build signed App Store/TestFlight artifact with iPad-specific UI support enabled.
 - Validate split-view constraints and share pipeline configuration.
+
+### visionOS
+
+- Build signed App Store/TestFlight artifact with visionOS simulator/device configuration.
+- Validate immersive-space transitions, media capture lifecycles, and fallback handoff behavior.
 
 ### Windows
 

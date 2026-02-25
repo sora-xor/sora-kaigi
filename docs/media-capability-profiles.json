@@ -77,6 +77,18 @@
       ]
     },
     {
+      "platform": "VisionOS",
+      "capture_pipeline": "native_avfoundation",
+      "hdr_capture_mode": "supported_hardware_only",
+      "hdr_render_mode": "supported_display_only",
+      "sdr_fallback_required": true,
+      "tone_mapping_required": true,
+      "preferred_video_codecs": [
+        "h265",
+        "h264"
+      ]
+    },
+    {
       "platform": "Windows",
       "capture_pipeline": "native_media_foundation",
       "hdr_capture_mode": "supported_hardware_only",

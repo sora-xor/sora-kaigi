@@ -8,6 +8,7 @@ Mandatory tracks:
 - `clients/macos`
 - `clients/ios`
 - `clients/ipados`
+- `clients/visionos`
 - `clients/windows`
 - `clients/android`
 - `clients/linux`

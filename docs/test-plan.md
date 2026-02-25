@@ -183,7 +183,7 @@ Media profile contract note:
 ## Suite G: Platform Contract and Fallback
 
 1. `PLATFORM-001` Mandatory platform coverage
-- Contract includes Web Chromium, Web Safari, Web Firefox, macOS, iOS, iPadOS, Windows, Android, and Linux.
+- Contract includes Web Chromium, Web Safari, Web Firefox, macOS, iOS, iPadOS, visionOS, Windows, Android, and Linux.
 
 2. `PLATFORM-002` Native web fallback enforcement
 - Every native platform contract requires browser fallback support coverage.
@@ -203,7 +203,7 @@ Media profile contract note:
 
 7. `PLATFORM-007` Client app workspace contract
 - Machine-readable client workspace contract (`docs/client-app-workspaces.json`) must define
-  implementation tracks for Web Chromium/Safari/Firefox and native macOS/iOS/iPadOS/Windows/
+  implementation tracks for Web Chromium/Safari/Firefox and native macOS/iOS/iPadOS/visionOS/Windows/
   Android/Linux.
 - Every workspace path must exist with a track README, and native tracks must reference the web
   fallback workspace contract.
@@ -259,12 +259,12 @@ Media profile contract note:
 ## Suite H: Release Operations
 
 1. `OPS-001` Release playbook completeness
-- Release playbook documents native platform tracks (macOS, iOS, iPadOS, Windows, Android, Linux)
+- Release playbook documents native platform tracks (macOS, iOS, iPadOS, visionOS, Windows, Android, Linux)
   and IPFS-hosted web release flow (Web Chromium, Web Safari, Web Firefox).
 - Release playbook includes build/signing, launch checklist, and post-release verification stages.
 
 2. `OPS-002` Rollback playbook completeness
-- Rollback playbook documents native rollback tracks (macOS, iOS, iPadOS, Windows, Android, Linux)
+- Rollback playbook documents native rollback tracks (macOS, iOS, iPadOS, visionOS, Windows, Android, Linux)
   and IPFS-hosted web rollback flow (Web Chromium, Web Safari, Web Firefox).
 - Rollback playbook includes trigger conditions, incident communication, and rollback exit criteria.
 
@@ -283,6 +283,12 @@ Media profile contract note:
 6. `OPS-006` Single-train GA approval
 - Machine-readable GA approval contract (`docs/ga-approvals.json`) confirms all mandatory
   platforms are approved in the same release train.
+
+7. `OPS-007` Native ops handoff package
+- Native release owner must be able to generate a deterministic handoff package bundle from
+  conformance/readiness evidence and release-manifest metadata without credential-backed
+  signing/store actions.
+- Handoff package must include packaged artifact outputs and checksums for operations review.
 
 ## Suite I: Parity Status Governance
 
@@ -414,6 +420,22 @@ Media profile contract note:
   - Produces `target/conformance/hardening-ga-smoke-report.json` and
     `hardening-ga-smoke.log`.
   - Runs targeted evidence cases for `OPS-005` and `OPS-006`.
+- `bash scripts/run_native_ops_handoff_package_smoke.sh`
+  - Produces `target/conformance/native-ops-handoff-package-smoke-report.json` and
+    `native-ops-handoff-package-smoke.log`.
+  - Runs targeted evidence case for `OPS-007`.
+- `bash scripts/run_web_client_smoke.sh`
+  - Produces `target/conformance/web-client-smoke-report.json` and
+    `web-client-smoke.log`.
+  - Executes web client install/build/test/smoke commands for the Web Chromium/Safari/Firefox track.
+- `bash scripts/run_linux_client_smoke.sh`
+  - Produces `target/conformance/linux-client-smoke-report.json` and
+    `linux-client-smoke.log`.
+  - Executes Linux client crate build/test/smoke commands for the Linux track.
+- `bash scripts/run_windows_client_smoke.sh`
+  - Produces `target/conformance/windows-client-smoke-report.json` and
+    `windows-client-smoke.log`.
+  - Executes Windows client restore/build/test on Windows hosts; non-Windows hosts report deterministic skips.
 - `bash scripts/run_client_app_workspaces_smoke.sh`
   - Produces `target/conformance/client-app-workspaces-smoke-report.json` and
     `client-app-workspaces-smoke.log`.
@@ -455,6 +477,8 @@ Media profile contract note:
     hardening/GA smoke, parity-readiness smoke, M3 exit-criteria smoke,
     parity GA smoke, parity downgrade guard smoke, parity waiver policy smoke,
     parity waiver policy negative-fixture smoke,
+    native ops handoff package smoke,
+    web client smoke, linux client smoke, windows client smoke,
     release-readiness smoke, platform-contract smoke, client-app-workspaces smoke,
     client-release-tracks smoke, client-release-playbook-alignment smoke,
     client-fallback-drills smoke, client-fallback-drill-results smoke,
@@ -485,6 +509,7 @@ Run all suites for:
 - macOS
 - iOS
 - iPadOS
+- visionOS
 - Windows
 - Android
 - Linux

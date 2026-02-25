@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "workspace_id": "android",
+      "artifact_uri": "gs://kaigi-releases/2027-01-31/android/kaigi-release.aab",
+      "artifact_path": "clients/android/app/build/outputs/bundle/release/app-release.aab",
+      "signature_ref": "cosign://kaigi-releases/2027-01-31/android/kaigi-release.aab.sig",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/android/kaigi-release.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/android/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:00:00Z"
+    },
+    {
+      "workspace_id": "ios",
+      "artifact_uri": "asc://kaigi/2027-01-31/ios/build/194",
+      "artifact_sha256": "44f8887efd7ec0c95d44e86d4eadf5efc8ffe6ee4e8f6f28a4779511f75be5cc",
+      "signature_ref": "codesign://kaigi/ios/2027-01-31/build-194",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/ios/kaigi-ios.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/ios/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:10:00Z"
+    },
+    {
+      "workspace_id": "ipados",
+      "artifact_uri": "asc://kaigi/2027-01-31/ipados/build/195",
+      "artifact_sha256": "d5a426b851091b58089e62820266a08ca3997eb7149373cf16b80ec7f300da5d",
+      "signature_ref": "codesign://kaigi/ipados/2027-01-31/build-195",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/ipados/kaigi-ipados.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/ipados/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:20:00Z"
+    },
+    {
+      "workspace_id": "linux",
+      "artifact_uri": "https://releases.kaigi.example/2027-01-31/linux/kaigi_1.0.0_amd64.deb",
+      "artifact_sha256": "fbf7c5bc52d878ba3a5af5cfb6828f6e9f3704afe212de7b4be39f8d64d311ca",
+      "signature_ref": "minisign://kaigi-releases/2027-01-31/linux/kaigi_1.0.0_amd64.deb.minisig",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/linux/kaigi-linux.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/linux/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:30:00Z"
+    },
+    {
+      "workspace_id": "macos",
+      "artifact_uri": "https://releases.kaigi.example/2027-01-31/macos/Kaigi-1.0.0.dmg",
+      "artifact_sha256": "2ebda79ecfcd82654f79ca89db1016a81463c45d6cdce2b040c8afec34fbb9a2",
+      "signature_ref": "notary://kaigi/macos/2027-01-31/notary-ticket",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/macos/kaigi-macos.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/macos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:40:00Z"
+    },
+    {
+      "workspace_id": "visionos",
+      "artifact_uri": "asc://kaigi/2027-01-31/visionos/build/196",
+      "artifact_sha256": "0dce8e9f08f3d5a73058ba6415a6d2da7ad76b8f6ff6f5ccf4ca66f9e9509117",
+      "signature_ref": "codesign://kaigi/visionos/2027-01-31/build-196",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/visionos/kaigi-visionos.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/visionos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:45:00Z"
+    },
+    {
+      "workspace_id": "web",
+      "artifact_uri": "ipfs://bafybeia52n4s3dkm6l7hu4p4zkte3jo37y74yra2wi2ygrxqf7kbw5f7te",
+      "artifact_sha256": "8b4f8119a1f6ef190f63389d2ec3cb6fd2f763f1d7a55c95c1a7e11ab5a943d3",
+      "signature_ref": "integrity://kaigi-web/2027-01-31/subresource-integrity-manifest.json",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/web/kaigi-web.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/web/provenance.intoto.jsonl",
+      "signing_verified": false,
+      "published_at": "2026-02-15T12:50:00Z"
+    },
+    {
+      "workspace_id": "windows",
+      "artifact_uri": "https://releases.kaigi.example/2027-01-31/windows/KaigiSetup-1.0.0.msi",
+      "artifact_sha256": "94dd1f6b0e3ddd73dc387e7f1f9f912f20f24481f4d4888a3a31589f5f0c95f8",
+      "signature_ref": "authenticode://kaigi/windows/2027-01-31/msi-signature",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/windows/kaigi-windows.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/windows/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T13:00:00Z"
+    }
+  ]
+}

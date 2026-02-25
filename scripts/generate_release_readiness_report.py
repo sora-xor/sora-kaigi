@@ -6,9 +6,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import pathlib
 import re
 import sys
+import tempfile
 from typing import Dict, List, Tuple
 
 SCENARIO_ID_RE = re.compile(r"`([A-Z]+(?:-[A-Z]+)*-\d{3})`")
@@ -69,6 +71,7 @@ OPS_SCENARIOS = {
     "OPS-004",
     "OPS-005",
     "OPS-006",
+    "OPS-007",
 }
 
 
@@ -122,6 +125,23 @@ def gate_result(
         "required_scenarios": sorted(required),
         "missing_or_failed_scenarios": missing_or_failed,
     }
+
+
+def atomic_write_text(path: pathlib.Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as tmp:
+        tmp.write(content)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+        temp_path = pathlib.Path(tmp.name)
+    temp_path.replace(path)
 
 
 def main() -> int:
@@ -265,8 +285,8 @@ def main() -> int:
     log_lines.append(f"GA gate passed: {ga_gate_passed}")
     log_lines.append(f"Report status: {report['status']}")
 
-    args.output_report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    args.log_file.write_text("\n".join(log_lines) + "\n", encoding="utf-8")
+    atomic_write_text(args.output_report, json.dumps(report, indent=2) + "\n")
+    atomic_write_text(args.log_file, "\n".join(log_lines) + "\n")
     print(f"Release readiness report status: {report['status']}")
     print(f"Release readiness report: {args.output_report}")
     print(f"Release readiness log: {args.log_file}")

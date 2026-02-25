@@ -955,12 +955,13 @@ fn parse_target_platform(raw: &str) -> Result<TargetPlatform> {
         "macos" | "mac-os" => TargetPlatform::MacOS,
         "ios" => TargetPlatform::IOS,
         "ipados" | "ipad-os" | "ipad" => TargetPlatform::IPadOS,
+        "visionos" | "vision-os" | "vision" => TargetPlatform::VisionOS,
         "windows" | "win" => TargetPlatform::Windows,
         "android" => TargetPlatform::Android,
         "linux" => TargetPlatform::Linux,
         _ => {
             return Err(anyhow!(
-                "unsupported --platform value `{raw}`; expected one of web-chromium, web-safari, web-firefox, macos, ios, ipados, windows, android, linux"
+                "unsupported --platform value `{raw}`; expected one of web-chromium, web-safari, web-firefox, macos, ios, ipados, visionos, windows, android, linux"
             ));
         }
     };
@@ -5024,6 +5025,10 @@ mod tests {
             TargetPlatform::IPadOS
         );
         assert_eq!(
+            parse_target_platform("vision-os").expect("parse vision-os"),
+            TargetPlatform::VisionOS
+        );
+        assert_eq!(
             parse_target_platform("win").expect("parse win"),
             TargetPlatform::Windows
         );
@@ -6198,9 +6203,11 @@ mod tests {
 
     #[test]
     fn session_policy_signature_hex_binds_e2ee_required_flag() {
-        let mut policy = LocalSessionPolicyState::default();
-        policy.policy_epoch = 3;
-        policy.max_participants = 250;
+        let mut policy = LocalSessionPolicyState {
+            policy_epoch: 3,
+            max_participants: 250,
+            ..Default::default()
+        };
         let with_e2ee = session_policy_signature_hex("host@sora", &policy, 100);
         policy.e2ee_required = false;
         let without_e2ee = session_policy_signature_hex("host@sora", &policy, 100);

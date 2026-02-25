@@ -1,6 +1,6 @@
 # Rollback Playbook
 
-Last updated: 2026-02-15
+Last updated: 2026-02-19
 
 ## Trigger Conditions
 
@@ -14,6 +14,28 @@ Last updated: 2026-02-15
 - Security, client leads, and release owner approve rollback execution.
 - Release communications owner publishes stakeholder updates.
 
+## Rollback Pipeline Stages
+
+### Stage 1: Unsigned Verification (Default)
+
+- Validate rollback metadata and readiness without credential-backed publish actions.
+- Required checks:
+  - `bash scripts/run_client_rollback_manifest_smoke.sh`
+  - `bash scripts/run_client_release_readiness_gates_smoke.sh`
+  - `bash scripts/run_client_fallback_drill_results_smoke.sh`
+- Confirm fallback-to-web pathways remain viable for all native workspaces.
+- Export rollback handoff bundle for ops:
+  - `target/conformance/release-readiness-report.json`
+  - `docs/client-release-manifest.json`
+  - `docs/client-rollback-manifest.json`
+  - `docs/client-fallback-drill-results.json`
+
+### Stage 2: Credentialed Rollback Publish
+
+- Execute only in protected release environments with release-owner approval.
+- Includes store/promote/notarization channel actions for signed native artifacts.
+- Must remain disabled in shared CI and non-release local environments.
+
 ## Client Rollback Track Contract
 
 | Workspace ID | Platforms | Distribution Channel | Signing Required | Fallback Workspace |
@@ -23,6 +45,7 @@ Last updated: 2026-02-15
 | ipados | iPadOS | app-store-connect | true | web |
 | linux | Linux | signed-package-repo | true | web |
 | macos | macOS | apple-notarized-distribution | true | web |
+| visionos | visionOS | app-store-connect | true | web |
 | web | Web Chromium, Web Safari, Web Firefox | ipfs | false | - |
 | windows | Windows | winget-msi | true | web |
 
@@ -42,6 +65,11 @@ Last updated: 2026-02-15
 
 - Halt phased rollout and promote last known-good TestFlight/App Store version.
 - Validate iPad-specific layout and share controls on rollback build.
+
+### visionOS
+
+- Halt phased rollout and promote last known-good TestFlight/App Store version.
+- Validate immersive-mode transitions and fallback-to-web behavior on rollback build.
 
 ### Windows
 

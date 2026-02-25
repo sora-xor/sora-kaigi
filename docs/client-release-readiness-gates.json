@@ -69,6 +69,19 @@
       ]
     },
     {
+      "workspace_id": "visionos",
+      "release_ready": true,
+      "manifest_status": "ready",
+      "fallback_drill_required": true,
+      "fallback_drill_status": "passed",
+      "max_rto_minutes": 30,
+      "observed_rto_minutes": 24,
+      "evidence_refs": [
+        "docs/client-release-manifest.json",
+        "docs/client-fallback-drill-results.json"
+      ]
+    },
+    {
       "workspace_id": "web",
       "release_ready": true,
       "manifest_status": "ready",

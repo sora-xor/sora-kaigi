@@ -1,7 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT_DIR="${1:-target/conformance}"
+OUT_DIR="target/conformance"
+declare -a EXTRA_ASSUME_PASSED=()
+
+if [[ $# -gt 0 && "${1}" != --* ]]; then
+  OUT_DIR="$1"
+  shift
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out-dir)
+      if [[ $# -lt 2 || -z "${2:-}" || "${2}" == -* ]]; then
+        echo "error: --out-dir requires a value" >&2
+        exit 2
+      fi
+      OUT_DIR="$2"
+      shift 2
+      ;;
+    --assume-passed)
+      if [[ $# -lt 2 || -z "${2:-}" || "${2}" == -* ]]; then
+        echo "error: --assume-passed requires a scenario id value" >&2
+        exit 2
+      fi
+      EXTRA_ASSUME_PASSED+=("$2")
+      shift 2
+      ;;
+    --help|-h)
+      cat <<'EOF'
+Usage: bash scripts/run_release_readiness_smoke.sh [--out-dir <path>] [--assume-passed <scenario_id>] [out_dir]
+EOF
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
 SUITE_ID="RELEASE-READINESS-SMOKE"
 
 mkdir -p "${OUT_DIR}"
@@ -21,6 +59,15 @@ declare -a SCENARIOS=(
 : >"${LOG_FILE}"
 suite_status="passed"
 results_json=""
+declare -a ASSUME_ARGS=(
+  --assume-passed OPS-003
+  --assume-passed OPS-004
+)
+if [[ ${#EXTRA_ASSUME_PASSED[@]} -gt 0 ]]; then
+  for assumed in "${EXTRA_ASSUME_PASSED[@]}"; do
+    ASSUME_ARGS+=(--assume-passed "${assumed}")
+  done
+fi
 
 for scenario_id in "${SCENARIOS[@]}"; do
   case_label=""
@@ -42,8 +89,7 @@ for scenario_id in "${SCENARIOS[@]}"; do
         --reports-dir "${OUT_DIR}" \
         --output-report "${READINESS_REPORT_FILE}" \
         --log-file "${READINESS_LOG_FILE}" \
-        --assume-passed OPS-003 \
-        --assume-passed OPS-004 \
+        "${ASSUME_ARGS[@]}" \
         2>&1 | tee -a "${LOG_FILE}"; then
         case_status="failed"
         suite_status="failed"

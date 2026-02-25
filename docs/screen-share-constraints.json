@@ -82,6 +82,18 @@
       "notes": "ReplayKit broadcast extension path; no window/tab source model."
     },
     {
+      "platform": "VisionOS",
+      "capture_targets": [
+        "display"
+      ],
+      "system_audio_modes": [
+        "none"
+      ],
+      "max_concurrent_local_shares": 1,
+      "requires_explicit_user_consent": true,
+      "notes": "ReplayKit/visionOS capture path; no window/tab source model."
+    },
+    {
       "platform": "Windows",
       "capture_targets": [
         "display",

@@ -1,7 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT_DIR="${1:-target/conformance}"
+OUT_DIR="target/conformance"
+POSITIONAL_OUT_DIR=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out-dir)
+      if [[ $# -lt 2 || -z "${2:-}" || "${2}" == -* ]]; then
+        echo "error: --out-dir requires a value" >&2
+        exit 2
+      fi
+      OUT_DIR="$2"
+      shift 2
+      ;;
+    --help|-h)
+      cat <<'EOF'
+Usage: bash scripts/run_conformance_evidence_bundle.sh [--out-dir <path>] [out_dir]
+EOF
+      exit 0
+      ;;
+    -*)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+    *)
+      if [[ -n "${POSITIONAL_OUT_DIR}" ]]; then
+        echo "Only one positional output directory is supported: $1" >&2
+        exit 2
+      fi
+      POSITIONAL_OUT_DIR="$1"
+      shift
+      ;;
+  esac
+done
+
+if [[ -n "${POSITIONAL_OUT_DIR}" ]]; then
+  OUT_DIR="${POSITIONAL_OUT_DIR}"
+fi
+
 SUITE_ID="CONFORMANCE-EVIDENCE-BUNDLE"
 
 mkdir -p "${OUT_DIR}"
@@ -10,6 +47,11 @@ REPORT_FILE="${OUT_DIR}/conformance-evidence-bundle-report.json"
 
 started_epoch="$(date -u +%s)"
 started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+# Ensure bootstrap coverage checks see only artifacts from this bundle run.
+find "${OUT_DIR}" -maxdepth 1 -type f \
+  \( -name "*-report.json" -o -name "*.log" -o -name "conformance-evidence-index.md" -o -name "*-checks.json" \) \
+  -delete
 
 declare -a SUITES=(
   "scale004|scripts/run_scale004_soak.sh|scale004-soak-report.json"
@@ -23,6 +65,10 @@ declare -a SUITES=(
   "parity_status|scripts/run_parity_status_smoke.sh|parity-status-smoke-report.json"
   "platform_contract|scripts/run_platform_contract_smoke.sh|platform-contract-smoke-report.json"
   "client_app_workspaces|scripts/run_client_app_workspaces_smoke.sh|client-app-workspaces-smoke-report.json"
+  "native_ga|scripts/run_native_ga_smoke.sh|native-ga-smoke-report.json"
+  "web_client|scripts/run_web_client_smoke.sh|web-client-smoke-report.json"
+  "linux_client|scripts/run_linux_client_smoke.sh|linux-client-smoke-report.json"
+  "windows_client|scripts/run_windows_client_smoke.sh|windows-client-smoke-report.json"
   "client_release_tracks|scripts/run_client_release_tracks_smoke.sh|client-release-tracks-smoke-report.json"
   "client_release_playbook_alignment|scripts/run_client_release_playbook_alignment_smoke.sh|client-release-playbook-alignment-smoke-report.json"
   "client_fallback_drills|scripts/run_client_fallback_drills_smoke.sh|client-fallback-drills-smoke-report.json"
@@ -41,7 +87,6 @@ declare -a SUITES=(
   "parity_waiver_fixture_manifest|scripts/run_parity_waiver_fixture_manifest_smoke.sh|parity-waiver-fixture-manifest-smoke-report.json"
   "parity_waiver_fixture_coverage|scripts/run_parity_waiver_fixture_coverage_smoke.sh|parity-waiver-fixture-coverage-smoke-report.json"
   "parity_waiver_policy_negative|scripts/run_parity_waiver_policy_negative_smoke.sh|parity-waiver-policy-negative-smoke-report.json"
-  "coverage_check|scripts/run_conformance_coverage_check.sh|conformance-coverage-report.json"
   "release_readiness_final|scripts/run_release_readiness_smoke.sh|release-readiness-smoke-report.json"
 )
 
@@ -83,6 +128,42 @@ cat >"${REPORT_FILE}" <<EOF
 }
 EOF
 
+echo "=== native_ops_handoff_package_smoke :: scripts/run_native_ops_handoff_package_smoke.sh ===" | tee -a "${LOG_FILE}"
+handoff_smoke_status="passed"
+if ! bash scripts/run_native_ops_handoff_package_smoke.sh "${OUT_DIR}" 2>&1 | tee -a "${LOG_FILE}"; then
+  handoff_smoke_status="failed"
+  bundle_status="failed"
+fi
+
+handoff_smoke_entry="{\"suite\":\"native_ops_handoff_package_smoke\",\"script\":\"scripts/run_native_ops_handoff_package_smoke.sh\",\"status\":\"${handoff_smoke_status}\",\"report_file\":\"${OUT_DIR}/native-ops-handoff-package-smoke-report.json\"}"
+results_json="${results_json},${handoff_smoke_entry}"
+
+echo "=== coverage_check :: scripts/run_conformance_coverage_check.sh ===" | tee -a "${LOG_FILE}"
+coverage_status="passed"
+if ! bash scripts/run_conformance_coverage_check.sh "${OUT_DIR}" 2>&1 | tee -a "${LOG_FILE}"; then
+  coverage_status="failed"
+  bundle_status="failed"
+fi
+
+coverage_entry="{\"suite\":\"coverage_check\",\"script\":\"scripts/run_conformance_coverage_check.sh\",\"status\":\"${coverage_status}\",\"report_file\":\"${OUT_DIR}/conformance-coverage-report.json\"}"
+results_json="${results_json},${coverage_entry}"
+
+finished_epoch="$(date -u +%s)"
+finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+duration_seconds=$((finished_epoch - started_epoch))
+
+cat >"${REPORT_FILE}" <<EOF
+{
+  "suite_id": "${SUITE_ID}",
+  "status": "${bundle_status}",
+  "started_at": "${started_at}",
+  "finished_at": "${finished_at}",
+  "duration_seconds": ${duration_seconds},
+  "log_file": "${LOG_FILE}",
+  "results": [${results_json}]
+}
+EOF
+
 echo "=== evidence_index :: scripts/run_conformance_evidence_index.sh ===" | tee -a "${LOG_FILE}"
 index_status="passed"
 if ! bash scripts/run_conformance_evidence_index.sh "${OUT_DIR}" 2>&1 | tee -a "${LOG_FILE}"; then
@@ -92,6 +173,16 @@ fi
 
 index_entry="{\"suite\":\"evidence_index\",\"script\":\"scripts/run_conformance_evidence_index.sh\",\"status\":\"${index_status}\",\"report_file\":\"${OUT_DIR}/conformance-evidence-index-report.json\"}"
 results_json="${results_json},${index_entry}"
+
+echo "=== native_ops_handoff_package :: scripts/run_native_ops_handoff_package.sh --skip-conformance-refresh ===" | tee -a "${LOG_FILE}"
+handoff_finalize_status="passed"
+if ! bash scripts/run_native_ops_handoff_package.sh --out-dir "${OUT_DIR}" --skip-conformance-refresh 2>&1 | tee -a "${LOG_FILE}"; then
+  handoff_finalize_status="failed"
+  bundle_status="failed"
+fi
+
+handoff_finalize_entry="{\"suite\":\"native_ops_handoff_package\",\"script\":\"scripts/run_native_ops_handoff_package.sh --skip-conformance-refresh\",\"status\":\"${handoff_finalize_status}\",\"report_file\":\"${OUT_DIR}/native-ops-handoff-package-report.json\"}"
+results_json="${results_json},${handoff_finalize_entry}"
 
 finished_epoch="$(date -u +%s)"
 finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"

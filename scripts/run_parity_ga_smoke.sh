@@ -1,14 +1,52 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT_DIR="${1:-target/conformance}"
+OUT_DIR="target/conformance"
+POSITIONAL_OUT_DIR=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out-dir)
+      if [[ $# -lt 2 || -z "${2:-}" || "${2}" == -* ]]; then
+        echo "error: --out-dir requires a value" >&2
+        exit 2
+      fi
+      OUT_DIR="$2"
+      shift 2
+      ;;
+    --help|-h)
+      cat <<'EOF'
+Usage: bash scripts/run_parity_ga_smoke.sh [--out-dir <path>] [out_dir]
+EOF
+      exit 0
+      ;;
+    -*)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+    *)
+      if [[ -n "${POSITIONAL_OUT_DIR}" ]]; then
+        echo "Only one positional output directory is supported: $1" >&2
+        exit 2
+      fi
+      POSITIONAL_OUT_DIR="$1"
+      shift
+      ;;
+  esac
+done
+
+if [[ -n "${POSITIONAL_OUT_DIR}" ]]; then
+  OUT_DIR="${POSITIONAL_OUT_DIR}"
+fi
+
 SUITE_ID="PARITY-GA-SMOKE"
 SCENARIO_ID="PARITY-004"
 
 mkdir -p "${OUT_DIR}"
 LOG_FILE="${OUT_DIR}/parity-ga-smoke.log"
 REPORT_FILE="${OUT_DIR}/parity-ga-smoke-report.json"
-COVERAGE_REPORT_FILE="${OUT_DIR}/conformance-coverage-report.json"
+COVERAGE_REPORT_FILE="${OUT_DIR}/parity-ga-bootstrap-coverage-report.json"
+COVERAGE_LOG_FILE="${OUT_DIR}/parity-ga-bootstrap-coverage.log"
 
 started_epoch="$(date -u +%s)"
 started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -16,19 +54,29 @@ started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 : >"${LOG_FILE}"
 status="passed"
 
-if [[ ! -f "${COVERAGE_REPORT_FILE}" ]]; then
-  echo "=== bootstrap :: scripts/run_conformance_coverage_check.sh ===" | tee -a "${LOG_FILE}"
-  if ! bash scripts/run_conformance_coverage_check.sh \
-    "${OUT_DIR}" \
-    --allow-missing-scenario "${SCENARIO_ID}" \
-    --allow-missing-scenario "PARITY-005" \
-    --allow-missing-scenario "PARITY-006" \
-    --allow-missing-scenario "PARITY-007" \
-    --allow-missing-scenario "PARITY-008" \
-    --allow-missing-scenario "PARITY-009" \
-    2>&1 | tee -a "${LOG_FILE}"; then
-    status="failed"
-  fi
+echo "=== bootstrap :: scripts/run_conformance_coverage_check.sh ===" | tee -a "${LOG_FILE}"
+if ! bash scripts/run_conformance_coverage_check.sh \
+  "${OUT_DIR}" \
+  --allow-missing-scenario "${SCENARIO_ID}" \
+  --allow-missing-scenario "OPS-007" \
+  --allow-missing-scenario "PARITY-005" \
+  --allow-missing-scenario "PARITY-006" \
+  --allow-missing-scenario "PARITY-007" \
+  --allow-missing-scenario "PARITY-008" \
+  --allow-missing-scenario "PARITY-009" \
+  --allow-failed-scenario "PARITY-002" \
+  --allow-failed-scenario "PARITY-003" \
+  --allow-failed-scenario "${SCENARIO_ID}" \
+  --allow-failed-scenario "OPS-007" \
+  --allow-failed-scenario "PARITY-005" \
+  --allow-failed-scenario "PARITY-006" \
+  --allow-failed-scenario "PARITY-007" \
+  --allow-failed-scenario "PARITY-008" \
+  --allow-failed-scenario "PARITY-009" \
+  --report-file "${COVERAGE_REPORT_FILE}" \
+  --log-file "${COVERAGE_LOG_FILE}" \
+  2>&1 | tee -a "${LOG_FILE}"; then
+  status="failed"
 fi
 
 echo "=== ${SCENARIO_ID} :: validate parity GA gate ===" | tee -a "${LOG_FILE}"
@@ -50,6 +98,8 @@ cat >"${REPORT_FILE}" <<EOF_JSON
   "finished_at": "${finished_at}",
   "duration_seconds": ${duration_seconds},
   "log_file": "${LOG_FILE}",
+  "coverage_report_file": "${COVERAGE_REPORT_FILE}",
+  "coverage_log_file": "${COVERAGE_LOG_FILE}",
   "results": [
     {
       "scenario_id": "${SCENARIO_ID}",

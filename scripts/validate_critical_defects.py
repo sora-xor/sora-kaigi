@@ -11,6 +11,7 @@ import sys
 
 EXPECTED_SCHEMA = "kaigi-critical-defects/v1"
 EXPECTED_FROZEN_AT = "2026-02-15"
+EXPECTED_MANDATORY_PLATFORM_COUNT = 10
 
 
 def parse_mandatory_platforms(parity_matrix_path: pathlib.Path) -> list[str]:
@@ -54,8 +55,11 @@ def main() -> int:
         raise RuntimeError(f"unexpected frozen_at in {args.defects_file}")
 
     mandatory_platforms = parse_mandatory_platforms(args.parity_matrix)
-    if len(mandatory_platforms) != 9:
-        raise RuntimeError("parity matrix mandatory platform list must contain 9 entries")
+    if len(mandatory_platforms) != EXPECTED_MANDATORY_PLATFORM_COUNT:
+        raise RuntimeError(
+            "parity matrix mandatory platform list must contain "
+            f"{EXPECTED_MANDATORY_PLATFORM_COUNT} entries"
+        )
 
     generated_at = payload.get("generated_at")
     if not isinstance(generated_at, str) or not generated_at.strip():
