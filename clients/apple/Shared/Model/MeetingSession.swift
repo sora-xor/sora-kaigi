@@ -255,6 +255,15 @@ final class MeetingSession: ObservableObject {
         connect()
     }
 
+#if DEBUG
+    func simulatePolicyFailureForTesting(
+        code: String = "policy_reject",
+        message: String = "blocked by policy"
+    ) {
+        rejectPolicy(code: code, message: message)
+    }
+#endif
+
     private func wireProtocolCallbacks() {
         protocolClient.eventHandler = { [weak self] event in
             guard let self else { return }

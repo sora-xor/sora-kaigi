@@ -35,6 +35,7 @@ EOF
 ```bash
 ./gradlew :app:testReleaseUnitTest
 ./gradlew :app:bundleRelease
+./gradlew :app:connectedDebugAndroidTest   # requires a running emulator/device
 ```
 
 4. Install debug app on emulator/device:
@@ -51,7 +52,9 @@ bash scripts/run_native_android_smoke.sh --out-dir target/conformance
 
 `run_native_android_smoke.sh` defaults `GRADLE_USER_HOME` to repo-local
 `.gradle/` and reuses `~/.gradle/wrapper/dists` when available, so smoke runs do
-not require writing to global Gradle cache paths.
+not require writing to global Gradle cache paths. It now includes
+`ANDROID-BUILD-004` for instrumentation UI tests and marks it `skipped` when no
+device is connected. Set `ALLOW_ANDROID_DEVICE_SKIPS=0` to fail instead.
 
 ## Artifacts
 

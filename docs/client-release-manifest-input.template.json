@@ -51,6 +51,16 @@
       "published_at": "2026-02-15T12:40:00Z"
     },
     {
+      "workspace_id": "tvos",
+      "artifact_uri": "asc://kaigi/2027-01-31/tvos/build/197",
+      "artifact_sha256": "7c17fcb365d5f9998e89f8ba1cc9a44c09f3588ddcc0f1e9c10f237c4d0e2b4a",
+      "signature_ref": "codesign://kaigi/tvos/2027-01-31/build-197",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/tvos/kaigi-tvos.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/tvos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:47:00Z"
+    },
+    {
       "workspace_id": "visionos",
       "artifact_uri": "asc://kaigi/2027-01-31/visionos/build/196",
       "artifact_sha256": "0dce8e9f08f3d5a73058ba6415a6d2da7ad76b8f6ff6f5ccf4ca66f9e9509117",
@@ -59,6 +69,16 @@
       "provenance_ref": "slsa://kaigi-releases/2027-01-31/visionos/provenance.intoto.jsonl",
       "signing_verified": true,
       "published_at": "2026-02-15T12:45:00Z"
+    },
+    {
+      "workspace_id": "watchos",
+      "artifact_uri": "asc://kaigi/2027-01-31/watchos/build/198",
+      "artifact_sha256": "9d1b3d7f2d786e36fbf9d6c8a0f99f5f06f9e7f4f5f095f7d4a93fb3d3f5f2c1",
+      "signature_ref": "codesign://kaigi/watchos/2027-01-31/build-198",
+      "sbom_ref": "spdx://kaigi-releases/2027-01-31/watchos/kaigi-watchos.spdx.json",
+      "provenance_ref": "slsa://kaigi-releases/2027-01-31/watchos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "published_at": "2026-02-15T12:48:00Z"
     },
     {
       "workspace_id": "web",

@@ -42,6 +42,20 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.macos.tests
         GENERATE_INFOPLIST_FILE: YES
 
+  KaigiMacOSUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: clients/apple/tests-ui/macos
+    dependencies:
+      - target: KaigiMacOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.macos.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: KaigiMacOS
+
   KaigiIOS:
     type: application
     platform: iOS
@@ -75,6 +89,21 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.tests
         GENERATE_INFOPLIST_FILE: YES
         TARGETED_DEVICE_FAMILY: "1"
+
+  KaigiIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests-ui/ios
+    dependencies:
+      - target: KaigiIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        TEST_TARGET_NAME: KaigiIOS
 
   KaigiIPadOS:
     type: application
@@ -110,6 +139,115 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TARGETED_DEVICE_FAMILY: "2"
 
+  KaigiIPadOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests-ui/ipados
+    dependencies:
+      - target: KaigiIPadOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ipados.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "2"
+        TEST_TARGET_NAME: KaigiIPadOS
+
+  KaigiTVOS:
+    type: application
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/Shared
+        excludes:
+          - Resources/LaunchScreen.storyboard
+      - path: clients/apple/tvOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.tvos
+        PRODUCT_NAME: KaigiTVOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi tvOS
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+        TARGETED_DEVICE_FAMILY: "3"
+
+  KaigiTVOSTests:
+    type: bundle.unit-test
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests/tvos
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiTVOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.tvos.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "3"
+
+  KaigiTVOSUITests:
+    type: bundle.ui-testing
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: clients/apple/tests-ui/tvos
+    dependencies:
+      - target: KaigiTVOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.tvos.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "3"
+        TEST_TARGET_NAME: KaigiTVOS
+
+  KaigiWatchOS:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: clients/apple/Shared
+        excludes:
+          - Resources/LaunchScreen.storyboard
+      - path: clients/apple/watchOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.watchos
+        PRODUCT_NAME: KaigiWatchOS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Kaigi watchOS
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Kaigi needs microphone access for meetings."
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: io.sora.kaigi.ios
+
+  KaigiWatchOSTests:
+    type: bundle.unit-test
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: clients/apple/tests/watchos
+      - path: clients/apple/Shared/Model
+    dependencies:
+      - target: KaigiWatchOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.watchos.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  KaigiWatchOSUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: clients/apple/tests-ui/watchos
+    dependencies:
+      - target: KaigiWatchOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.ios.watchos.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: KaigiWatchOS
+
   KaigiVisionOS:
     type: application
     platform: visionOS
@@ -141,3 +279,17 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.visionos.tests
         GENERATE_INFOPLIST_FILE: YES
+
+  KaigiVisionOSUITests:
+    type: bundle.ui-testing
+    platform: visionOS
+    deploymentTarget: "1.0"
+    sources:
+      - path: clients/apple/tests-ui/visionos
+    dependencies:
+      - target: KaigiVisionOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sora.kaigi.visionos.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: KaigiVisionOS

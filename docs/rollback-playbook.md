@@ -1,6 +1,6 @@
 # Rollback Playbook
 
-Last updated: 2026-02-19
+Last updated: 2026-02-25
 
 ## Trigger Conditions
 
@@ -45,7 +45,9 @@ Last updated: 2026-02-19
 | ipados | iPadOS | app-store-connect | true | web |
 | linux | Linux | signed-package-repo | true | web |
 | macos | macOS | apple-notarized-distribution | true | web |
+| tvos | tvOS | app-store-connect | true | web |
 | visionos | visionOS | app-store-connect | true | web |
+| watchos | watchOS | app-store-connect | true | web |
 | web | Web Chromium, Web Safari, Web Firefox | ipfs | false | - |
 | windows | Windows | winget-msi | true | web |
 
@@ -65,6 +67,16 @@ Last updated: 2026-02-19
 
 - Halt phased rollout and promote last known-good TestFlight/App Store version.
 - Validate iPad-specific layout and share controls on rollback build.
+
+### tvOS
+
+- Halt rollout and promote last known-good tvOS build in the Apple channel.
+- Validate focus/navigation behavior and dashboard/connect flow on rollback build.
+
+### watchOS
+
+- Halt rollout and promote last known-good watchOS build in the Apple channel.
+- Validate compact dashboard/connect flow and fallback signaling on rollback build.
 
 ### visionOS
 

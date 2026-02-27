@@ -93,12 +93,48 @@
       "fallback_workspace": "web"
     },
     {
+      "workspace_id": "tvos",
+      "platforms": [
+        "tvOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiTVOS -destination 'generic/platform=tvOS Simulator' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform tvos --out-dir target/conformance --skip-xcodegen",
+      "artifact_kind": "app-store-ipa",
+      "distribution_channel": "app-store-connect",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
       "workspace_id": "visionos",
       "platforms": [
         "visionOS"
       ],
       "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiVisionOS -destination 'generic/platform=visionOS Simulator' build CODE_SIGNING_ALLOWED=NO",
       "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform visionos --out-dir target/conformance --skip-xcodegen",
+      "artifact_kind": "app-store-ipa",
+      "distribution_channel": "app-store-connect",
+      "release_channels": [
+        "alpha",
+        "beta",
+        "ga"
+      ],
+      "signing_required": true,
+      "hdr_validation_required": true,
+      "fallback_workspace": "web"
+    },
+    {
+      "workspace_id": "watchos",
+      "platforms": [
+        "watchOS"
+      ],
+      "ci_build_command": "xcodebuild -workspace Kaigi.xcworkspace -scheme KaigiWatchOS -destination 'generic/platform=watchOS Simulator' build CODE_SIGNING_ALLOWED=NO",
+      "ci_smoke_command": "bash scripts/run_native_apple_smoke.sh --platform watchos --out-dir target/conformance --skip-xcodegen",
       "artifact_kind": "app-store-ipa",
       "distribution_channel": "app-store-connect",
       "release_channels": [

@@ -21,6 +21,7 @@ npm --prefix clients/web ci
 npm --prefix clients/web run test
 npm --prefix clients/web run build
 npm --prefix clients/web run test:smoke
+npm --prefix clients/web run test:e2e
 ```
 
 ## Runtime Config Schema

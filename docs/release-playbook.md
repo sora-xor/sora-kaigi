@@ -1,6 +1,6 @@
 # Release Playbook
 
-Last updated: 2026-02-20
+Last updated: 2026-02-25
 
 ## Scope
 
@@ -26,8 +26,9 @@ fallback for `sora-kaigi`.
 ### Stage 1: Unsigned CI (Default)
 
 - This stage is credential-free and must pass on every PR/release branch.
+- Aggregated UI E2E helper: `bash scripts/run_client_ui_e2e_smoke.sh --out-dir target/conformance`
 - Android command: `bash scripts/run_native_android_smoke.sh --out-dir target/conformance`
-- Apple command: `bash scripts/run_native_apple_smoke.sh --out-dir target/conformance --skip-xcodegen`
+- Apple command (macOS/iOS/iPadOS/tvOS/watchOS + optional visionOS): `bash scripts/run_native_apple_smoke.sh --out-dir target/conformance --skip-xcodegen`
 - Apple CI default: visionOS smoke is skipped when `CI=true` (set `SKIP_VISIONOS=0` to enable it in a credentialed Apple environment).
 - Web command: `bash scripts/run_web_client_smoke.sh --out-dir target/conformance`
 - Linux command: `bash scripts/run_linux_client_smoke.sh --out-dir target/conformance`
@@ -72,7 +73,9 @@ fallback for `sora-kaigi`.
 | ipados | iPadOS | app-store-ipa | app-store-connect | true | true |
 | linux | Linux | signed-linux-package | signed-package-repo | true | true |
 | macos | macOS | signed-dmg | apple-notarized-distribution | true | true |
+| tvos | tvOS | app-store-ipa | app-store-connect | true | true |
 | visionos | visionOS | app-store-ipa | app-store-connect | true | true |
+| watchos | watchOS | app-store-ipa | app-store-connect | true | true |
 | web | Web Chromium, Web Safari, Web Firefox | ipfs-web-bundle | ipfs | false | true |
 | windows | Windows | signed-msi | winget-msi | true | true |
 
@@ -104,6 +107,16 @@ fallback for `sora-kaigi`.
 
 - Build signed App Store/TestFlight artifact with iPad-specific UI support enabled.
 - Validate split-view constraints and share pipeline configuration.
+
+### tvOS
+
+- Build signed tvOS artifact in the Apple distribution pipeline.
+- Validate Siri Remote focus/navigation behavior and dashboard/connect flow parity.
+
+### watchOS
+
+- Build signed watchOS companion artifact in the Apple distribution pipeline.
+- Validate compact dashboard/connect flow parity and fallback status signaling.
 
 ### visionOS
 

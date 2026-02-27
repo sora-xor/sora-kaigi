@@ -80,6 +80,21 @@
       "published_at": "2026-02-15T13:50:00Z"
     },
     {
+      "workspace_id": "tvos",
+      "platforms": [
+        "tvOS"
+      ],
+      "distribution_channel": "app-store-connect",
+      "rollback_artifact_uri": "asc://kaigi/2026-12-15/tvos/build/179",
+      "rollback_artifact_sha256": "7a8f9a6a2cdd2eb7ea98fc7d13f6d32a2e29aa73cf2e0ef8b9df1ac6be5a6d48",
+      "rollback_signature_ref": "codesign://kaigi/tvos/2026-12-15/build-179",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/tvos/kaigi-tvos.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/tvos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:56:00Z"
+    },
+    {
       "workspace_id": "visionos",
       "platforms": [
         "visionOS"
@@ -93,6 +108,21 @@
       "signing_verified": true,
       "status": "ready",
       "published_at": "2026-02-15T13:55:00Z"
+    },
+    {
+      "workspace_id": "watchos",
+      "platforms": [
+        "watchOS"
+      ],
+      "distribution_channel": "app-store-connect",
+      "rollback_artifact_uri": "asc://kaigi/2026-12-15/watchos/build/180",
+      "rollback_artifact_sha256": "81dd0d4a372127aab22e62e7f21d2f8ca82adfd04a2f2234d19890ff6adf31be",
+      "rollback_signature_ref": "codesign://kaigi/watchos/2026-12-15/build-180",
+      "rollback_sbom_ref": "spdx://kaigi-releases/2026-12-15/watchos/kaigi-watchos.spdx.json",
+      "rollback_provenance_ref": "slsa://kaigi-releases/2026-12-15/watchos/provenance.intoto.jsonl",
+      "signing_verified": true,
+      "status": "ready",
+      "published_at": "2026-02-15T13:57:00Z"
     },
     {
       "workspace_id": "web",

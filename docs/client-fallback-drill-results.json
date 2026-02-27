@@ -54,6 +54,16 @@
       "executed_at": "2026-02-15T11:00:00Z"
     },
     {
+      "workspace_id": "tvos",
+      "platform": "tvOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "browser_profile": "Web Safari",
+      "observed_rto_minutes": 21,
+      "status": "passed",
+      "executed_at": "2026-02-15T11:22:00Z"
+    },
+    {
       "workspace_id": "visionos",
       "platform": "visionOS",
       "fallback_workspace": "web",
@@ -62,6 +72,16 @@
       "observed_rto_minutes": 24,
       "status": "passed",
       "executed_at": "2026-02-15T11:20:00Z"
+    },
+    {
+      "workspace_id": "watchos",
+      "platform": "watchOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "browser_profile": "Web Safari",
+      "observed_rto_minutes": 25,
+      "status": "passed",
+      "executed_at": "2026-02-15T11:24:00Z"
     },
     {
       "workspace_id": "windows",

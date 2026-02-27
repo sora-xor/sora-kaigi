@@ -29,6 +29,15 @@ Parity gate rule:
 - Android
 - Linux
 
+## Supplemental Apple Platforms
+
+- tvOS
+- watchOS
+
+These surfaces are represented in `docs/client-app-workspaces.json` and validated in Apple smoke
+evidence (`APPLE-BUILD-005`, `APPLE-BUILD-006`) but are not part of the mandatory parity gate
+matrix for GA.
+
 ## Core Meeting Capability Matrix
 
 | Capability | Web Chromium | Web Safari | Web Firefox | macOS | iOS | iPadOS | visionOS | Windows | Android | Linux |

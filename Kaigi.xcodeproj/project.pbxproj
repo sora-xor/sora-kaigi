@@ -11,10 +11,16 @@
 		0DA3FE0F21E5BA03CEA72FAB /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
 		15C17FDE3A964A03D9D5862A /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		1E853FA099BD1852DC8DEF52 /* KaigiIOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6570696BE93BC27D4DE1184F /* KaigiIOSTests.swift */; };
+		1F3CC14C7F4A53387BE53FDD /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
+		22F8D88C6FAA1178516A8601 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		23ECEC71BDEE2CAFA4B02629 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
+		25CC07327957A7CFA06E7777 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
+		26A36FCF52C2FF189322CA0B /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
+		28EB4B5BAA8EE77D1DE74169 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		2BA5E31E9E23AFAAC0FA7120 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		2BE488D99937A5D57E6887FD /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
 		2E494215F5F7B51D242497F7 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
+		2E70B29FB9D56401A2F6321A /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		2F3853E9CDBE71D4D357532E /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		304ECF88380EB7EB29262409 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		30F06F1A35C1CB83D3ECE6CF /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
@@ -22,48 +28,78 @@
 		31B899EFE9FB00A074452F1B /* KaigiMacOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E4E6B58B1181757FDBA68BA /* KaigiMacOSApp.swift */; };
 		3274FF196EC1558BB1E6AF48 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		35C5ABA301CEB9B710856985 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
+		379E902C3ED2E497A646E851 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		3825E79C0BE65B5E99A26521 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		384A9676E2AC3D98DDA7CAF3 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
+		3878AE7D1A44531971AB02DF /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		389839A48DF038F5C4010E28 /* KaigiIPadOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81E6B936AA7009AC0D1C86CE /* KaigiIPadOSTests.swift */; };
+		39858D6444FA6A66F9972C8F /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
+		3ACF75B67301D7CA0C68897A /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
 		3CB302212ADD2AF65CD68AB4 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		3DE50D425665AE113FE6AD1B /* KaigiIPadOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355B6C81281293E8A93F4CF8 /* KaigiIPadOSApp.swift */; };
+		3E360FA990F117790D9F3A5B /* KaigiIPadOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA731841A781BD29150A1E00 /* KaigiIPadOSUITests.swift */; };
 		40F31205E834A97EC6537E42 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		415771E27A57F1F78D10D99E /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		423690F717CB6D5BF96594BC /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		42D9B71B26E61A4FFC395CD4 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		44437CA292595CD8207FC0B2 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
+		48C62C9E7EA65E34725CA6FB /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		49559DB6C6E143D81096D574 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
+		49BB923701038469437A5769 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
 		4B0E0219F235CBB5B5ABFA6D /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		4CF5DEDFBE5598C4519D182A /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
+		50B7FFC56799725F615A80D6 /* KaigiWatchOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB5E623492D10BE58036C40 /* KaigiWatchOSTests.swift */; };
+		5165BDBFC472B547F3AC2E28 /* KaigiTVOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 389F2A91792212D9E100749E /* KaigiTVOSApp.swift */; };
+		58A8B3D3624301CEABDC2B62 /* KaigiTVOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73EB078022589FD59C7F5339 /* KaigiTVOSUITests.swift */; };
 		5A284F12DBCF1DB1E5B9EB40 /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
+		5CE686CDAACD1C02E9D9009F /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		5D2C5983C7D365CEAA2A4086 /* KaigiVisionOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4DCCAC4A942F970392FCB03 /* KaigiVisionOSApp.swift */; };
 		60C15F9119F2028DB7C57032 /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
 		621DB69C198499CAD923EA4F /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		62657678FCFEB5F669D558D9 /* KaigiIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6951C88653D5D3B1C0D8CC5 /* KaigiIOSApp.swift */; };
 		64F5B9A7806F5C7302D06D54 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 065D14F723DAB23DDDBB3FB9 /* LaunchScreen.storyboard */; };
+		6734BF8D29888A1C9837CD60 /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
 		69B3403DEF314C8D44E38A1A /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
+		6D099AE7C800877AB184DC62 /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
 		6D6F4695B7A03226164A9F60 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
+		6E2FC1D0C0ED6CAB6EA03AF0 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
+		6FA78873F93C0B0F59A07F03 /* KaigiWatchOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6979FA90394B915C075D3990 /* KaigiWatchOSApp.swift */; };
 		6FF42529DA9B480DCFA7FB6F /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
 		73BAB1BD95EA6F516B8872E2 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		7653FAAB71E15CE88D63E75E /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
+		76AD2B6CE6CECBFE365377B3 /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
 		7A129CDA7739C9A60840BBB4 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
+		7E17E17EE0E4200A75D02872 /* KaigiIOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D16FD170883D6B5043D6DC /* KaigiIOSUITests.swift */; };
+		82C6CED8C7A874EC986ED12E /* KaigiMacOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCE6BD12B7AE6FE784F22A5 /* KaigiMacOSUITests.swift */; };
+		82DB3249F6AEBEAA45ADCEBC /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
+		82FAF62CF653CF4A276D2D22 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		856B94511F6758CB8ECE6011 /* KaigiMacOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC499046524E73816658FEBD /* KaigiMacOSTests.swift */; };
 		8612D3471487FD287A6EFF1B /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		86B7731AC085E74B45A72AFE /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
+		8882D0C75531F82268A7ABFA /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		8B9B36414E38A7B4112CFFB1 /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		8D39D1414736F989D82730D6 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
+		8E2B4B056F81DC6C30B9E9A2 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
+		901DFC097BE233B4D63B06A3 /* KaigiVisionOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64B8A5D4667F35023A244B2E /* KaigiVisionOSUITests.swift */; };
 		91EF29E3A636C0EA669EB179 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		A02BDD7EF1F8CB15E3FA49E1 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
+		A74146DF36B63ED808565BE1 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		A8AC0B5DFAC7301C1EAAC5A0 /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
 		AB7DF1D7D52752A199791717 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		AD200AE4EC312E3DDD9541FF /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
+		B0459E3E58486402637683DF /* KaigiWatchOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0E7D8D7C0F9F62EBA160E6 /* KaigiWatchOSUITests.swift */; };
 		B3DF105267FCC6513C8F2282 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
+		B5DD26B651FEED7A2FE85E57 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		B6698CF6333A72F5E4AC9129 /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
+		B7AC9214F4B71954F3BEE921 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
+		B9A4B215E5BD83F38193984C /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		BB0DA4A15D2EC17BFD6A937D /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
+		BCCEAC1D67A7082B1B8A7F2D /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		BD60BA3CDE4C7C457B9D30F3 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		BDE595F21C961620B60A9722 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
 		C3C6F9AF6B1F149BE28CB8B7 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		C5CF113B91859673D5B7080D /* WebFallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */; };
+		C668739F181BAED5377449D3 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
 		C769804D4D1C89AAF05CB651 /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
 		C8F56164036542D80C8F5BB2 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		C9388D9210B7DFD362701B98 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
@@ -74,22 +110,56 @@
 		D1BCA04B528F2FAABF9712AD /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
 		D58575BBAA8BBE2B88325AB7 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		D66854E241E02918F8164F11 /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
+		D83A0EBF8B078301A950C530 /* MeetingSessionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */; };
+		E2513D3E481DD44BB394160B /* MeetingTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */; };
+		E5B3868DBF971F6E40FE75BB /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		E97854DF8CD59CE3B12E586B /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
 		ECA70EF66FED80467D2D3CA4 /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 		EF275ECA4D460D45265D4574 /* MeetingProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */; };
 		F0517206BAAD637660362AF4 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */; };
+		F5265751885E0935B60C0B33 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
+		F748C2298297B6412C274376 /* KaigiTVOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D1E85CA0FBB4D92DC88C67 /* KaigiTVOSTests.swift */; };
 		F7991E6C32194862222E47AC /* MeetingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */; };
 		F84C967FEC9F2527DD488B00 /* MeetingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */; };
 		F8A02C668864DCF8B573D734 /* MeetingProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */; };
+		FBA43D7A0BC46834AF66B41D /* MeetingProtocolReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		070F874F03CFFBFD1536542E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BC7A08A1494B7A52F84E40CE;
+			remoteInfo = KaigiWatchOS;
+		};
+		0DD89720D10130CC9DA48E00 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 88F95A74F9284BED7F365BC9;
+			remoteInfo = KaigiTVOS;
+		};
+		1192407172E59388FAB24140 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 755847A9FD04DB479D982D5B;
+			remoteInfo = KaigiVisionOS;
+		};
 		258E43D042A9549DA4D629C0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 755847A9FD04DB479D982D5B;
 			remoteInfo = KaigiVisionOS;
+		};
+		337F6C32FEB76ADD20772565 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 97A7E059A1EE1ABAF4243540;
+			remoteInfo = KaigiIPadOS;
 		};
 		4E5F7C49AC7ADBE3CF75FCDE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -105,6 +175,34 @@
 			remoteGlobalIDString = 4580CDD96B109AFC2DCF6E4E;
 			remoteInfo = KaigiMacOS;
 		};
+		879EDA3FDADD44104ACF0AA0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 88F95A74F9284BED7F365BC9;
+			remoteInfo = KaigiTVOS;
+		};
+		A034DAE8450E1CBE7ABC0559 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4580CDD96B109AFC2DCF6E4E;
+			remoteInfo = KaigiMacOS;
+		};
+		A0C53719D8730A2D815F17E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 21BF0BC8065C123816785782;
+			remoteInfo = KaigiIOS;
+		};
+		B05600234607AF50FB4B292A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BC7A08A1494B7A52F84E40CE;
+			remoteInfo = KaigiWatchOS;
+		};
 		E0B8DFF48C2FF5C422BF69A0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D84CCD7DB7577CCF7ED72F05 /* Project object */;
@@ -116,29 +214,49 @@
 
 /* Begin PBXFileReference section */
 		065D14F723DAB23DDDBB3FB9 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		0C0E7D8D7C0F9F62EBA160E6 /* KaigiWatchOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiWatchOSUITests.swift; sourceTree = "<group>"; };
 		0DA2C2368F75DB3285407A5C /* KaigiMacOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaigiMacOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FB5E623492D10BE58036C40 /* KaigiWatchOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiWatchOSTests.swift; sourceTree = "<group>"; };
 		1381E00BB3A50390BD845279 /* MeetingProtocolReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProtocolReducer.swift; sourceTree = "<group>"; };
 		15A418BFC764A8BF9E6B1F16 /* KaigiIPadOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KaigiIPadOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		181ACFD00F1B345DDB746E55 /* KaigiTVOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiTVOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19F703AC3FB398CD3B53FD83 /* KaigiIOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		25DF0FA7585C0D7619825D6E /* MeetingTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingTelemetry.swift; sourceTree = "<group>"; };
 		355B6C81281293E8A93F4CF8 /* KaigiIPadOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIPadOSApp.swift; sourceTree = "<group>"; };
+		389F2A91792212D9E100749E /* KaigiTVOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiTVOSApp.swift; sourceTree = "<group>"; };
+		4C53D4BBBD83F239CB1563BA /* KaigiIPadOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiIPadOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebFallbackView.swift; sourceTree = "<group>"; };
+		5875C95B77BA14C1CF9B51ED /* KaigiWatchOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaigiWatchOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		59D16FD170883D6B5043D6DC /* KaigiIOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIOSUITests.swift; sourceTree = "<group>"; };
+		5BCE6BD12B7AE6FE784F22A5 /* KaigiMacOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiMacOSUITests.swift; sourceTree = "<group>"; };
+		5C8AA1D7F6904872776AD522 /* KaigiVisionOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiVisionOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		64B8A5D4667F35023A244B2E /* KaigiVisionOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiVisionOSUITests.swift; sourceTree = "<group>"; };
 		6570696BE93BC27D4DE1184F /* KaigiIOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIOSTests.swift; sourceTree = "<group>"; };
+		68540FCC7415C2D5D5891BA8 /* KaigiIOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6979FA90394B915C075D3990 /* KaigiWatchOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiWatchOSApp.swift; sourceTree = "<group>"; };
+		6B33A75341FE6CD146A594B0 /* KaigiWatchOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaigiWatchOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BDB0CD3E9D043DCEFAA67F1 /* MeetingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSession.swift; sourceTree = "<group>"; };
+		6C6251373C079A6032CD1396 /* KaigiTVOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiTVOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F87B6C245DF85ED79A23837 /* KaigiVisionOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiVisionOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		707B479EA21007CA80AA98EB /* KaigiMacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaigiMacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		73EB078022589FD59C7F5339 /* KaigiTVOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiTVOSUITests.swift; sourceTree = "<group>"; };
 		78D4CDAF2AE79ED6F69E1E50 /* KaigiIPadOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KaigiIPadOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		81E6B936AA7009AC0D1C86CE /* KaigiIPadOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIPadOSTests.swift; sourceTree = "<group>"; };
 		865B24B6E8C61461C0FEE74A /* MeetingConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingConfig.swift; sourceTree = "<group>"; };
 		8E4E6B58B1181757FDBA68BA /* KaigiMacOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiMacOSApp.swift; sourceTree = "<group>"; };
 		A2B45CBEEC176FAC5629956A /* KaigiIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KaigiIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A56F3144FF143E8DCE96567A /* KaigiVisionOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KaigiVisionOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA731841A781BD29150A1E00 /* KaigiIPadOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIPadOSUITests.swift; sourceTree = "<group>"; };
 		AF4DAB2809EC465C21634AF3 /* MeetingProtocolClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProtocolClient.swift; sourceTree = "<group>"; };
+		B1B1D107C35406D8C3009189 /* KaigiTVOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KaigiTVOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6951C88653D5D3B1C0D8CC5 /* KaigiIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiIOSApp.swift; sourceTree = "<group>"; };
 		B79909D8EDD16D67B6A4BAB4 /* MeetingProtocolTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProtocolTypes.swift; sourceTree = "<group>"; };
 		BC499046524E73816658FEBD /* KaigiMacOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiMacOSTests.swift; sourceTree = "<group>"; };
+		D21482ACEFBFFC4BBE7ADD6E /* KaigiWatchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaigiWatchOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8EE5839CC44D7DB9DD92805 /* MeetingSessionPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSessionPersistence.swift; sourceTree = "<group>"; };
 		E15A1D3BC7890A56058002E2 /* KaigiVisionOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiVisionOSTests.swift; sourceTree = "<group>"; };
+		E1E320FB01F39C53DE54ADD6 /* KaigiMacOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaigiMacOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E4D1E85CA0FBB4D92DC88C67 /* KaigiTVOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiTVOSTests.swift; sourceTree = "<group>"; };
 		F4DCCAC4A942F970392FCB03 /* KaigiVisionOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaigiVisionOSApp.swift; sourceTree = "<group>"; };
 		F65D3FF0D7E7A7A578769C20 /* MeetingDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -158,6 +276,22 @@
 				355B6C81281293E8A93F4CF8 /* KaigiIPadOSApp.swift */,
 			);
 			path = iPadOS;
+			sourceTree = "<group>";
+		};
+		0C29F703962D5B571B59E6CE /* visionos */ = {
+			isa = PBXGroup;
+			children = (
+				64B8A5D4667F35023A244B2E /* KaigiVisionOSUITests.swift */,
+			);
+			path = visionos;
+			sourceTree = "<group>";
+		};
+		189B9999B7D5B71C7EE471CC /* ipados */ = {
+			isa = PBXGroup;
+			children = (
+				AA731841A781BD29150A1E00 /* KaigiIPadOSUITests.swift */,
+			);
+			path = ipados;
 			sourceTree = "<group>";
 		};
 		1F2D1D2F18DC3278802DDF85 /* Model */ = {
@@ -182,6 +316,14 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		2CE2DF2997821A8EE3F81FAF /* macos */ = {
+			isa = PBXGroup;
+			children = (
+				5BCE6BD12B7AE6FE784F22A5 /* KaigiMacOSUITests.swift */,
+			);
+			path = macos;
+			sourceTree = "<group>";
+		};
 		2F54F1BE251C220479A77491 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -197,12 +339,22 @@
 			children = (
 				A2B45CBEEC176FAC5629956A /* KaigiIOS.app */,
 				19F703AC3FB398CD3B53FD83 /* KaigiIOSTests.xctest */,
+				68540FCC7415C2D5D5891BA8 /* KaigiIOSUITests.xctest */,
 				15A418BFC764A8BF9E6B1F16 /* KaigiIPadOS.app */,
 				78D4CDAF2AE79ED6F69E1E50 /* KaigiIPadOSTests.xctest */,
+				4C53D4BBBD83F239CB1563BA /* KaigiIPadOSUITests.xctest */,
 				707B479EA21007CA80AA98EB /* KaigiMacOS.app */,
 				0DA2C2368F75DB3285407A5C /* KaigiMacOSTests.xctest */,
+				E1E320FB01F39C53DE54ADD6 /* KaigiMacOSUITests.xctest */,
+				B1B1D107C35406D8C3009189 /* KaigiTVOS.app */,
+				181ACFD00F1B345DDB746E55 /* KaigiTVOSTests.xctest */,
+				6C6251373C079A6032CD1396 /* KaigiTVOSUITests.xctest */,
 				A56F3144FF143E8DCE96567A /* KaigiVisionOS.app */,
 				6F87B6C245DF85ED79A23837 /* KaigiVisionOSTests.xctest */,
+				5C8AA1D7F6904872776AD522 /* KaigiVisionOSUITests.xctest */,
+				D21482ACEFBFFC4BBE7ADD6E /* KaigiWatchOS.app */,
+				6B33A75341FE6CD146A594B0 /* KaigiWatchOSTests.xctest */,
+				5875C95B77BA14C1CF9B51ED /* KaigiWatchOSUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -237,7 +389,9 @@
 				4EA49D64DFEE166F19C6C311 /* ios */,
 				58C2D396EB2957A1B97B06B1 /* ipados */,
 				E68BF0791CD23C72CD0640EE /* macos */,
+				BE55CC876725A9ADB4AC22B8 /* tvos */,
 				5AD91C5A18B0F3CEF17E4315 /* visionos */,
+				F7042FF00770F54B62FE0472 /* watchos */,
 			);
 			path = tests;
 			sourceTree = "<group>";
@@ -258,6 +412,22 @@
 			path = visionos;
 			sourceTree = "<group>";
 		};
+		5D37062C77E553A176336461 /* tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				389F2A91792212D9E100749E /* KaigiTVOSApp.swift */,
+			);
+			path = tvOS;
+			sourceTree = "<group>";
+		};
+		6ED8F9A14939760C945F95CD /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				6979FA90394B915C075D3990 /* KaigiWatchOSApp.swift */,
+			);
+			path = watchOS;
+			sourceTree = "<group>";
+		};
 		74C3790E2EEA0094D405CB05 /* macOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -274,7 +444,10 @@
 				74C3790E2EEA0094D405CB05 /* macOS */,
 				2F54F1BE251C220479A77491 /* Shared */,
 				4ED36D0CF8A156505267E919 /* tests */,
+				F121D6C962D966A4A61DF3C7 /* tests-ui */,
+				5D37062C77E553A176336461 /* tvOS */,
 				04B2F200A1C060721E5BDDFF /* visionOS */,
+				6ED8F9A14939760C945F95CD /* watchOS */,
 			);
 			path = apple;
 			sourceTree = "<group>";
@@ -287,12 +460,49 @@
 			path = clients;
 			sourceTree = "<group>";
 		};
+		BA2DA848E56177693A3C743A /* watchos */ = {
+			isa = PBXGroup;
+			children = (
+				0C0E7D8D7C0F9F62EBA160E6 /* KaigiWatchOSUITests.swift */,
+			);
+			path = watchos;
+			sourceTree = "<group>";
+		};
+		BE55CC876725A9ADB4AC22B8 /* tvos */ = {
+			isa = PBXGroup;
+			children = (
+				E4D1E85CA0FBB4D92DC88C67 /* KaigiTVOSTests.swift */,
+			);
+			path = tvos;
+			sourceTree = "<group>";
+		};
+		DE51DD24BCEB6C47043ACB2B /* tvos */ = {
+			isa = PBXGroup;
+			children = (
+				73EB078022589FD59C7F5339 /* KaigiTVOSUITests.swift */,
+			);
+			path = tvos;
+			sourceTree = "<group>";
+		};
 		E68BF0791CD23C72CD0640EE /* macos */ = {
 			isa = PBXGroup;
 			children = (
 				BC499046524E73816658FEBD /* KaigiMacOSTests.swift */,
 			);
 			path = macos;
+			sourceTree = "<group>";
+		};
+		F121D6C962D966A4A61DF3C7 /* tests-ui */ = {
+			isa = PBXGroup;
+			children = (
+				F99060F1DA7FC667F73016B1 /* ios */,
+				189B9999B7D5B71C7EE471CC /* ipados */,
+				2CE2DF2997821A8EE3F81FAF /* macos */,
+				DE51DD24BCEB6C47043ACB2B /* tvos */,
+				0C29F703962D5B571B59E6CE /* visionos */,
+				BA2DA848E56177693A3C743A /* watchos */,
+			);
+			path = "tests-ui";
 			sourceTree = "<group>";
 		};
 		F446E87A97A30B4EB0610F69 /* View */ = {
@@ -302,6 +512,22 @@
 				52DAB431D0C300A30DD5AE39 /* WebFallbackView.swift */,
 			);
 			path = View;
+			sourceTree = "<group>";
+		};
+		F7042FF00770F54B62FE0472 /* watchos */ = {
+			isa = PBXGroup;
+			children = (
+				0FB5E623492D10BE58036C40 /* KaigiWatchOSTests.swift */,
+			);
+			path = watchos;
+			sourceTree = "<group>";
+		};
+		F99060F1DA7FC667F73016B1 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				59D16FD170883D6B5043D6DC /* KaigiIOSUITests.swift */,
+			);
+			path = ios;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -324,6 +550,24 @@
 			productName = KaigiIOS;
 			productReference = A2B45CBEEC176FAC5629956A /* KaigiIOS.app */;
 			productType = "com.apple.product-type.application";
+		};
+		24A069883646F1CCF9962FEE /* KaigiMacOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A97FCE01C7BDA697E752672F /* Build configuration list for PBXNativeTarget "KaigiMacOSUITests" */;
+			buildPhases = (
+				812F02F1EA6D6E7C5E0892EE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8DA698C4D8FBF15438323C50 /* PBXTargetDependency */,
+			);
+			name = KaigiMacOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiMacOSUITests;
+			productReference = E1E320FB01F39C53DE54ADD6 /* KaigiMacOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		3001245A2243354CFCAD3354 /* KaigiIPadOSTests */ = {
 			isa = PBXNativeTarget;
@@ -360,6 +604,78 @@
 			productReference = 707B479EA21007CA80AA98EB /* KaigiMacOS.app */;
 			productType = "com.apple.product-type.application";
 		};
+		471FB813396F45095D62C297 /* KaigiVisionOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 497CF6348D9B92A6E68DE50A /* Build configuration list for PBXNativeTarget "KaigiVisionOSUITests" */;
+			buildPhases = (
+				EA80DD54EED7872FAD44E6D5 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				30F28E47A3F77300DC69DC39 /* PBXTargetDependency */,
+			);
+			name = KaigiVisionOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiVisionOSUITests;
+			productReference = 5C8AA1D7F6904872776AD522 /* KaigiVisionOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		4A53DCBCAF8696E03293C9DA /* KaigiIPadOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA89CF7ADFF7ECF391EB5586 /* Build configuration list for PBXNativeTarget "KaigiIPadOSUITests" */;
+			buildPhases = (
+				52DA5DE1DCA345ADE8E681D1 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A7587CD579D16EBE878D0B61 /* PBXTargetDependency */,
+			);
+			name = KaigiIPadOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiIPadOSUITests;
+			productReference = 4C53D4BBBD83F239CB1563BA /* KaigiIPadOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		4FEEDBC304DC0B080B93F4C4 /* KaigiIOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7473674CBAEF28A173EC827B /* Build configuration list for PBXNativeTarget "KaigiIOSUITests" */;
+			buildPhases = (
+				05D6147FC719DEBC5A7EE998 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				134FEC4C2F73DAF43597D04F /* PBXTargetDependency */,
+			);
+			name = KaigiIOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiIOSUITests;
+			productReference = 68540FCC7415C2D5D5891BA8 /* KaigiIOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		5253E03E5F510583685F31C3 /* KaigiTVOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3098B736BF5488B85B0C4F7B /* Build configuration list for PBXNativeTarget "KaigiTVOSTests" */;
+			buildPhases = (
+				F162E2526D9DB4BF505386CD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CCD6192F6DDD47BA158C97C2 /* PBXTargetDependency */,
+			);
+			name = KaigiTVOSTests;
+			packageProductDependencies = (
+			);
+			productName = KaigiTVOSTests;
+			productReference = 181ACFD00F1B345DDB746E55 /* KaigiTVOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		69C5C6479592CCB58E13A88A /* KaigiVisionOSTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E5C8AF7F7A65AA78CDBB406D /* Build configuration list for PBXNativeTarget "KaigiVisionOSTests" */;
@@ -395,6 +711,24 @@
 			productReference = A56F3144FF143E8DCE96567A /* KaigiVisionOS.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7925269718DFE14D3C5BF3A8 /* KaigiWatchOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 182A26EE574B7AC4E285E26B /* Build configuration list for PBXNativeTarget "KaigiWatchOSUITests" */;
+			buildPhases = (
+				AFF2B728F0802ABA85DDA3F7 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0A340C21FB2BFA0D21126E7A /* PBXTargetDependency */,
+			);
+			name = KaigiWatchOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiWatchOSUITests;
+			productReference = 5875C95B77BA14C1CF9B51ED /* KaigiWatchOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		8528760272AC7F5C03260460 /* KaigiMacOSTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 395721D3C267AEB626AE49D1 /* Build configuration list for PBXNativeTarget "KaigiMacOSTests" */;
@@ -413,6 +747,23 @@
 			productReference = 0DA2C2368F75DB3285407A5C /* KaigiMacOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		88F95A74F9284BED7F365BC9 /* KaigiTVOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9366E34470DD76871021983D /* Build configuration list for PBXNativeTarget "KaigiTVOS" */;
+			buildPhases = (
+				3E0A2B157D4A4C4E355EDAAE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KaigiTVOS;
+			packageProductDependencies = (
+			);
+			productName = KaigiTVOS;
+			productReference = B1B1D107C35406D8C3009189 /* KaigiTVOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		97A7E059A1EE1ABAF4243540 /* KaigiIPadOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63663DF3D822607F78F80E63 /* Build configuration list for PBXNativeTarget "KaigiIPadOS" */;
@@ -429,6 +780,41 @@
 			);
 			productName = KaigiIPadOS;
 			productReference = 15A418BFC764A8BF9E6B1F16 /* KaigiIPadOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BC5E3F6212735C9D09EC96E0 /* KaigiTVOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 545FC2E3096AB31793104FC8 /* Build configuration list for PBXNativeTarget "KaigiTVOSUITests" */;
+			buildPhases = (
+				C7D102BC9C6768592EBF7253 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A52F59EFDDB79A6AB9969021 /* PBXTargetDependency */,
+			);
+			name = KaigiTVOSUITests;
+			packageProductDependencies = (
+			);
+			productName = KaigiTVOSUITests;
+			productReference = 6C6251373C079A6032CD1396 /* KaigiTVOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		BC7A08A1494B7A52F84E40CE /* KaigiWatchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FC854CE960E15B2F4B684BDB /* Build configuration list for PBXNativeTarget "KaigiWatchOS" */;
+			buildPhases = (
+				5A4771B7B8E3E7947044458C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KaigiWatchOS;
+			packageProductDependencies = (
+			);
+			productName = KaigiWatchOS;
+			productReference = D21482ACEFBFFC4BBE7ADD6E /* KaigiWatchOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C3E787D7D9DD06D03AF8A6D4 /* KaigiIOSTests */ = {
@@ -449,6 +835,24 @@
 			productReference = 19F703AC3FB398CD3B53FD83 /* KaigiIOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		E81D7F9855C35D45361832AE /* KaigiWatchOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C7D23099F2FC81F68EF0892 /* Build configuration list for PBXNativeTarget "KaigiWatchOSTests" */;
+			buildPhases = (
+				104D597FDB090C74FB097BD2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4D28DB4BBB07734D6E8A3E51 /* PBXTargetDependency */,
+			);
+			name = KaigiWatchOSTests;
+			packageProductDependencies = (
+			);
+			productName = KaigiWatchOSTests;
+			productReference = 6B33A75341FE6CD146A594B0 /* KaigiWatchOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -457,6 +861,26 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					24A069883646F1CCF9962FEE = {
+						TestTargetID = 4580CDD96B109AFC2DCF6E4E;
+					};
+					471FB813396F45095D62C297 = {
+						TestTargetID = 755847A9FD04DB479D982D5B;
+					};
+					4A53DCBCAF8696E03293C9DA = {
+						TestTargetID = 97A7E059A1EE1ABAF4243540;
+					};
+					4FEEDBC304DC0B080B93F4C4 = {
+						TestTargetID = 21BF0BC8065C123816785782;
+					};
+					7925269718DFE14D3C5BF3A8 = {
+						TestTargetID = BC7A08A1494B7A52F84E40CE;
+					};
+					BC5E3F6212735C9D09EC96E0 = {
+						TestTargetID = 88F95A74F9284BED7F365BC9;
+					};
+				};
 			};
 			buildConfigurationList = CBDA7BC6B17743E6FA8CBCF0 /* Build configuration list for PBXProject "Kaigi" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -474,12 +898,22 @@
 			targets = (
 				21BF0BC8065C123816785782 /* KaigiIOS */,
 				C3E787D7D9DD06D03AF8A6D4 /* KaigiIOSTests */,
+				4FEEDBC304DC0B080B93F4C4 /* KaigiIOSUITests */,
 				97A7E059A1EE1ABAF4243540 /* KaigiIPadOS */,
 				3001245A2243354CFCAD3354 /* KaigiIPadOSTests */,
+				4A53DCBCAF8696E03293C9DA /* KaigiIPadOSUITests */,
 				4580CDD96B109AFC2DCF6E4E /* KaigiMacOS */,
 				8528760272AC7F5C03260460 /* KaigiMacOSTests */,
+				24A069883646F1CCF9962FEE /* KaigiMacOSUITests */,
+				88F95A74F9284BED7F365BC9 /* KaigiTVOS */,
+				5253E03E5F510583685F31C3 /* KaigiTVOSTests */,
+				BC5E3F6212735C9D09EC96E0 /* KaigiTVOSUITests */,
 				755847A9FD04DB479D982D5B /* KaigiVisionOS */,
 				69C5C6479592CCB58E13A88A /* KaigiVisionOSTests */,
+				471FB813396F45095D62C297 /* KaigiVisionOSUITests */,
+				BC7A08A1494B7A52F84E40CE /* KaigiWatchOS */,
+				E81D7F9855C35D45361832AE /* KaigiWatchOSTests */,
+				7925269718DFE14D3C5BF3A8 /* KaigiWatchOSUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -504,6 +938,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		05D6147FC719DEBC5A7EE998 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E17E17EE0E4200A75D02872 /* KaigiIOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		104D597FDB090C74FB097BD2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B7FFC56799725F615A80D6 /* KaigiWatchOSTests.swift in Sources */,
+				8E2B4B056F81DC6C30B9E9A2 /* MeetingConfig.swift in Sources */,
+				25CC07327957A7CFA06E7777 /* MeetingProtocolClient.swift in Sources */,
+				FBA43D7A0BC46834AF66B41D /* MeetingProtocolReducer.swift in Sources */,
+				B7AC9214F4B71954F3BEE921 /* MeetingProtocolTypes.swift in Sources */,
+				6E2FC1D0C0ED6CAB6EA03AF0 /* MeetingSession.swift in Sources */,
+				B9A4B215E5BD83F38193984C /* MeetingSessionPersistence.swift in Sources */,
+				1F3CC14C7F4A53387BE53FDD /* MeetingTelemetry.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2735ECD40942A7E50C5E4C1A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -549,6 +1006,56 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3E0A2B157D4A4C4E355EDAAE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5165BDBFC472B547F3AC2E28 /* KaigiTVOSApp.swift in Sources */,
+				F5265751885E0935B60C0B33 /* MeetingConfig.swift in Sources */,
+				6D099AE7C800877AB184DC62 /* MeetingDashboardView.swift in Sources */,
+				B5DD26B651FEED7A2FE85E57 /* MeetingProtocolClient.swift in Sources */,
+				22F8D88C6FAA1178516A8601 /* MeetingProtocolReducer.swift in Sources */,
+				3ACF75B67301D7CA0C68897A /* MeetingProtocolTypes.swift in Sources */,
+				C668739F181BAED5377449D3 /* MeetingSession.swift in Sources */,
+				D83A0EBF8B078301A950C530 /* MeetingSessionPersistence.swift in Sources */,
+				E2513D3E481DD44BB394160B /* MeetingTelemetry.swift in Sources */,
+				6734BF8D29888A1C9837CD60 /* WebFallbackView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		52DA5DE1DCA345ADE8E681D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3E360FA990F117790D9F3A5B /* KaigiIPadOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A4771B7B8E3E7947044458C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FA78873F93C0B0F59A07F03 /* KaigiWatchOSApp.swift in Sources */,
+				BCCEAC1D67A7082B1B8A7F2D /* MeetingConfig.swift in Sources */,
+				76AD2B6CE6CECBFE365377B3 /* MeetingDashboardView.swift in Sources */,
+				E5B3868DBF971F6E40FE75BB /* MeetingProtocolClient.swift in Sources */,
+				82DB3249F6AEBEAA45ADCEBC /* MeetingProtocolReducer.swift in Sources */,
+				49BB923701038469437A5769 /* MeetingProtocolTypes.swift in Sources */,
+				379E902C3ED2E497A646E851 /* MeetingSession.swift in Sources */,
+				48C62C9E7EA65E34725CA6FB /* MeetingSessionPersistence.swift in Sources */,
+				3878AE7D1A44531971AB02DF /* MeetingTelemetry.swift in Sources */,
+				26A36FCF52C2FF189322CA0B /* WebFallbackView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		812F02F1EA6D6E7C5E0892EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				82C6CED8C7A874EC986ED12E /* KaigiMacOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8F533A697FF7B09B376A03AD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -581,6 +1088,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AFF2B728F0802ABA85DDA3F7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0459E3E58486402637683DF /* KaigiWatchOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BD1A4FC5E06E8FA773BA4C0E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -598,6 +1113,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C7D102BC9C6768592EBF7253 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58A8B3D3624301CEABDC2B62 /* KaigiTVOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C92CD4452DFE20A1C488364A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -612,6 +1135,29 @@
 				C769804D4D1C89AAF05CB651 /* MeetingSessionPersistence.swift in Sources */,
 				BB0DA4A15D2EC17BFD6A937D /* MeetingTelemetry.swift in Sources */,
 				C5CF113B91859673D5B7080D /* WebFallbackView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA80DD54EED7872FAD44E6D5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				901DFC097BE233B4D63B06A3 /* KaigiVisionOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F162E2526D9DB4BF505386CD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F748C2298297B6412C274376 /* KaigiTVOSTests.swift in Sources */,
+				82FAF62CF653CF4A276D2D22 /* MeetingConfig.swift in Sources */,
+				8882D0C75531F82268A7ABFA /* MeetingProtocolClient.swift in Sources */,
+				5CE686CDAACD1C02E9D9009F /* MeetingProtocolReducer.swift in Sources */,
+				39858D6444FA6A66F9972C8F /* MeetingProtocolTypes.swift in Sources */,
+				A74146DF36B63ED808565BE1 /* MeetingSession.swift in Sources */,
+				2E70B29FB9D56401A2F6321A /* MeetingSessionPersistence.swift in Sources */,
+				28EB4B5BAA8EE77D1DE74169 /* MeetingTelemetry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -635,15 +1181,55 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0A340C21FB2BFA0D21126E7A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BC7A08A1494B7A52F84E40CE /* KaigiWatchOS */;
+			targetProxy = B05600234607AF50FB4B292A /* PBXContainerItemProxy */;
+		};
+		134FEC4C2F73DAF43597D04F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 21BF0BC8065C123816785782 /* KaigiIOS */;
+			targetProxy = A0C53719D8730A2D815F17E4 /* PBXContainerItemProxy */;
+		};
 		1438DD72AB0B982AA4E9EBC8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 21BF0BC8065C123816785782 /* KaigiIOS */;
 			targetProxy = 4E5F7C49AC7ADBE3CF75FCDE /* PBXContainerItemProxy */;
 		};
+		30F28E47A3F77300DC69DC39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 755847A9FD04DB479D982D5B /* KaigiVisionOS */;
+			targetProxy = 1192407172E59388FAB24140 /* PBXContainerItemProxy */;
+		};
+		4D28DB4BBB07734D6E8A3E51 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BC7A08A1494B7A52F84E40CE /* KaigiWatchOS */;
+			targetProxy = 070F874F03CFFBFD1536542E /* PBXContainerItemProxy */;
+		};
 		4DE7C1A3BBC529CF8E7C09A6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 755847A9FD04DB479D982D5B /* KaigiVisionOS */;
 			targetProxy = 258E43D042A9549DA4D629C0 /* PBXContainerItemProxy */;
+		};
+		8DA698C4D8FBF15438323C50 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4580CDD96B109AFC2DCF6E4E /* KaigiMacOS */;
+			targetProxy = A034DAE8450E1CBE7ABC0559 /* PBXContainerItemProxy */;
+		};
+		A52F59EFDDB79A6AB9969021 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 88F95A74F9284BED7F365BC9 /* KaigiTVOS */;
+			targetProxy = 0DD89720D10130CC9DA48E00 /* PBXContainerItemProxy */;
+		};
+		A7587CD579D16EBE878D0B61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 97A7E059A1EE1ABAF4243540 /* KaigiIPadOS */;
+			targetProxy = 337F6C32FEB76ADD20772565 /* PBXContainerItemProxy */;
+		};
+		CCD6192F6DDD47BA158C97C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 88F95A74F9284BED7F365BC9 /* KaigiTVOS */;
+			targetProxy = 879EDA3FDADD44104ACF0AA0 /* PBXContainerItemProxy */;
 		};
 		E17045340621A783E216C3EA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -676,6 +1262,188 @@
 			};
 			name = Debug;
 		};
+		05165B7C5622BFCCF3CD8CB5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = KaigiIOS;
+			};
+			name = Debug;
+		};
+		0825621040A2DE6E3D38B68A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ipados.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_TARGET_NAME = KaigiIPadOS;
+			};
+			name = Release;
+		};
+		0F1B0C53CF2140F85DE97662 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.visionos.uitests;
+				SDKROOT = xros;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_TARGET_NAME = KaigiVisionOS;
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Release;
+		};
+		15A456DE95873B76B8CEEFB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kaigi tvOS";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kaigi needs microphone access for meetings.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos;
+				PRODUCT_NAME = KaigiTVOS;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		242B765A18B2456D4C467D07 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kaigi watchOS";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kaigi needs microphone access for meetings.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.sora.kaigi.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos;
+				PRODUCT_NAME = KaigiWatchOS;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		2E924EBE59EC71256AD865A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos.uitests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = KaigiTVOS;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		311F9900CA216BFD1BD06886 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos.tests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KaigiWatchOS.app/KaigiWatchOS";
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		318AB8A22E1401F558DE3F36 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos.uitests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = KaigiWatchOS;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		44BD7C9AB259528205F63B88 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos.tests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KaigiTVOS.app/KaigiTVOS";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		4EEC54B164F02B62652595B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kaigi watchOS";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kaigi needs microphone access for meetings.";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = io.sora.kaigi.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos;
+				PRODUCT_NAME = KaigiWatchOS;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
 		50B68371FC6D45CE93C217EE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -699,6 +1467,42 @@
 			};
 			name = Debug;
 		};
+		52A01FD09A1F50537796D856 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ipados.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_TARGET_NAME = KaigiIPadOS;
+			};
+			name = Debug;
+		};
+		5D023B68505E28472395636A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos.tests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KaigiTVOS.app/KaigiTVOS";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
 		6B7481D34498B7801C649B30 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -717,6 +1521,24 @@
 			};
 			name = Release;
 		};
+		772F7CCBDE74E9797AB51585 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.visionos.uitests;
+				SDKROOT = xros;
+				TARGETED_DEVICE_FAMILY = 7;
+				TEST_TARGET_NAME = KaigiVisionOS;
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Debug;
+		};
 		7F4EC0A935F014A07E340365 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -734,6 +1556,25 @@
 				XROS_DEPLOYMENT_TARGET = 1.0;
 			};
 			name = Release;
+		};
+		84D78F6DB7AF821DB52EF65A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos.tests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KaigiWatchOS.app/KaigiWatchOS";
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
 		};
 		8A22A1D1D480B2883BB717D8 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -788,6 +1629,43 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KaigiMacOS.app/Contents/MacOS/KaigiMacOS";
 			};
 			name = Release;
+		};
+		8F4E61AA7080F48A7402A24F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.macos.uitests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = KaigiMacOS;
+			};
+			name = Debug;
+		};
+		98EB9C6C06E21BB6F20E3D89 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.watchos.uitests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = KaigiWatchOS;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
 		};
 		9BD5E12EAB88A04C9ABF8C07 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -948,6 +1826,24 @@
 			};
 			name = Release;
 		};
+		C1CCE315666C233F2D88AD21 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos.uitests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = KaigiTVOS;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
 		C7FA45C381D5C62ABDAD75F6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1074,6 +1970,24 @@
 			};
 			name = Release;
 		};
+		EE7821D847FD266FF6608699 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.ios.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = KaigiIOS;
+			};
+			name = Release;
+		};
 		F245850905D373D6E0155810 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1095,14 +2009,79 @@
 			};
 			name = Debug;
 		};
+		F957089F33750DD0F5343E2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kaigi tvOS";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kaigi needs microphone access for meetings.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.tvos;
+				PRODUCT_NAME = KaigiTVOS;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		FE1E106F8D3B1136C00E251D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.sora.kaigi.macos.uitests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = KaigiMacOS;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		182A26EE574B7AC4E285E26B /* Build configuration list for PBXNativeTarget "KaigiWatchOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98EB9C6C06E21BB6F20E3D89 /* Debug */,
+				318AB8A22E1401F558DE3F36 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3098B736BF5488B85B0C4F7B /* Build configuration list for PBXNativeTarget "KaigiTVOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44BD7C9AB259528205F63B88 /* Debug */,
+				5D023B68505E28472395636A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		395721D3C267AEB626AE49D1 /* Build configuration list for PBXNativeTarget "KaigiMacOSTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8BBBE1E9DAF63763917C0146 /* Debug */,
 				8C792F0022E42CA99E80B010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		497CF6348D9B92A6E68DE50A /* Build configuration list for PBXNativeTarget "KaigiVisionOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				772F7CCBDE74E9797AB51585 /* Debug */,
+				0F1B0C53CF2140F85DE97662 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -1116,11 +2095,38 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		545FC2E3096AB31793104FC8 /* Build configuration list for PBXNativeTarget "KaigiTVOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1CCE315666C233F2D88AD21 /* Debug */,
+				2E924EBE59EC71256AD865A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5C7D23099F2FC81F68EF0892 /* Build configuration list for PBXNativeTarget "KaigiWatchOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				84D78F6DB7AF821DB52EF65A /* Debug */,
+				311F9900CA216BFD1BD06886 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		63663DF3D822607F78F80E63 /* Build configuration list for PBXNativeTarget "KaigiIPadOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E2F05781C8FD499C782D89BC /* Debug */,
 				D21AB686B25C11593C90EEEC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7473674CBAEF28A173EC827B /* Build configuration list for PBXNativeTarget "KaigiIOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				05165B7C5622BFCCF3CD8CB5 /* Debug */,
+				EE7821D847FD266FF6608699 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -1143,11 +2149,38 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		9366E34470DD76871021983D /* Build configuration list for PBXNativeTarget "KaigiTVOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A456DE95873B76B8CEEFB3 /* Debug */,
+				F957089F33750DD0F5343E2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A97FCE01C7BDA697E752672F /* Build configuration list for PBXNativeTarget "KaigiMacOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F4E61AA7080F48A7402A24F /* Debug */,
+				FE1E106F8D3B1136C00E251D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		C8EBE4E86A0C61EBA48C5B58 /* Build configuration list for PBXNativeTarget "KaigiVisionOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9BD5E12EAB88A04C9ABF8C07 /* Debug */,
 				A1250999524DC72A7BDF1E63 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CA89CF7ADFF7ECF391EB5586 /* Build configuration list for PBXNativeTarget "KaigiIPadOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				52A01FD09A1F50537796D856 /* Debug */,
+				0825621040A2DE6E3D38B68A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -1175,6 +2208,15 @@
 			buildConfigurations = (
 				DBBCB3A05A710858C7D5582A /* Debug */,
 				7F4EC0A935F014A07E340365 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FC854CE960E15B2F4B684BDB /* Build configuration list for PBXNativeTarget "KaigiWatchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4EEC54B164F02B62652595B7 /* Debug */,
+				242B765A18B2456D4C467D07 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -12,6 +12,7 @@ import sys
 EXPECTED_SCHEMA = "kaigi-client-app-workspaces/v1"
 EXPECTED_FROZEN_AT = "2026-02-15"
 WORKSPACE_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SUPPLEMENTAL_NATIVE_PLATFORMS = {"tvOS", "watchOS"}
 
 
 def load_json(path: pathlib.Path) -> dict:
@@ -127,9 +128,15 @@ def main() -> int:
                 raise RuntimeError(
                     f"workspace {workspace_id}: platform entries must be non-empty strings"
                 )
-            if platform not in required_platform_set:
+            if platform not in required_platform_set and platform not in SUPPLEMENTAL_NATIVE_PLATFORMS:
+                allowed = sorted(required_platform_set | SUPPLEMENTAL_NATIVE_PLATFORMS)
                 raise RuntimeError(
-                    f"workspace {workspace_id}: unknown platform in contract: {platform}"
+                    f"workspace {workspace_id}: unknown platform in contract: {platform} "
+                    f"(allowed: {', '.join(allowed)})"
+                )
+            if implementation == "web" and platform in SUPPLEMENTAL_NATIVE_PLATFORMS:
+                raise RuntimeError(
+                    f"workspace {workspace_id}: web workspace cannot claim supplemental native platform {platform}"
                 )
             if platform in platform_owner:
                 raise RuntimeError(

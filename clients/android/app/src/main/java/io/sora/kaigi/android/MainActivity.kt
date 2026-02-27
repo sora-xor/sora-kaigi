@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -230,26 +231,30 @@ private fun MeetingShell(viewModel: MeetingViewModel = viewModel()) {
                 color = Color.White,
                 fontSize = 30.sp,
                 fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Black
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.testTag("kaigi.header.title")
             )
             Text(
                 text = "Status: ${state.transportState}",
                 color = if (state.connected) Color(0xFF7CFC9D) else Color(0xFFFFC947),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("kaigi.status.label")
             )
             state.lastError?.let {
                 Text(
                     text = "Last Error: $it",
                     color = Color(0xFFFF8A80),
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    modifier = Modifier.testTag("kaigi.status.last_error")
                 )
             }
             state.fallbackRtoMs?.let {
                 Text(
                     text = "Last fallback recovery: ${it}ms",
                     color = Color(0xFFB3E5FC),
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    modifier = Modifier.testTag("kaigi.status.fallback_rto")
                 )
             }
 
@@ -264,14 +269,24 @@ private fun MeetingShell(viewModel: MeetingViewModel = viewModel()) {
                 Button(
                     onClick = { viewModel.connect() },
                     enabled = state.config.isJoinable(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF18A999))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF18A999)),
+                    modifier = Modifier.testTag("kaigi.controls.connect")
                 ) { Text(if (state.connected) "Reconnect" else "Connect") }
 
-                Button(onClick = { viewModel.sendPing() }, enabled = state.connected) { Text("Ping") }
-                Button(onClick = { viewModel.disconnect() }, enabled = state.connected) { Text("Disconnect") }
+                Button(
+                    onClick = { viewModel.sendPing() },
+                    enabled = state.connected,
+                    modifier = Modifier.testTag("kaigi.controls.ping")
+                ) { Text("Ping") }
+                Button(
+                    onClick = { viewModel.disconnect() },
+                    enabled = state.connected,
+                    modifier = Modifier.testTag("kaigi.controls.disconnect")
+                ) { Text("Disconnect") }
                 TextButton(
                     onClick = { showFallback = true },
-                    enabled = state.config.fallbackUriOrNull() != null
+                    enabled = state.config.fallbackUriOrNull() != null,
+                    modifier = Modifier.testTag("kaigi.controls.open_fallback")
                 ) { Text("Web Fallback") }
             }
 
@@ -280,7 +295,7 @@ private fun MeetingShell(viewModel: MeetingViewModel = viewModel()) {
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0x33000000)
             ) {
-                LazyColumn(modifier = Modifier.padding(12.dp)) {
+                LazyColumn(modifier = Modifier.padding(12.dp).testTag("kaigi.log.list")) {
                     items(state.logs) { log ->
                         val color = when (log.level) {
                             MeetingLogLevel.INFO -> Color.White
@@ -325,7 +340,8 @@ private fun SessionSnapshotCard(session: ProtocolSessionState) {
                 text = "e2eeRequired=${yesNo(session.e2eeRequired)} maxParticipants=${session.maxParticipants} policyEpoch=${session.policyEpoch}",
                 color = Color(0xFFCFD8DC),
                 fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.testTag("kaigi.session.e2ee_line")
             )
             Text(
                 text = "recording=${session.recordingNotice.wire} media=${session.mediaProfile.preferredProfile.wire}/${session.mediaProfile.negotiatedProfile.wire}",
@@ -364,19 +380,39 @@ private fun ConfigEditor(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        ConfigField("Signaling URL", config.signalingUrl) {
+        ConfigField(
+            label = "Signaling URL",
+            value = config.signalingUrl,
+            testTag = "kaigi.config.signaling_url"
+        ) {
             onConfigChange { current -> current.copy(signalingUrl = it) }
         }
-        ConfigField("Fallback URL", config.fallbackUrl) {
+        ConfigField(
+            label = "Fallback URL",
+            value = config.fallbackUrl,
+            testTag = "kaigi.config.fallback_url"
+        ) {
             onConfigChange { current -> current.copy(fallbackUrl = it) }
         }
-        ConfigField("Room ID", config.roomId) {
+        ConfigField(
+            label = "Room ID",
+            value = config.roomId,
+            testTag = "kaigi.config.room_id"
+        ) {
             onConfigChange { current -> current.copy(roomId = it) }
         }
-        ConfigField("Participant", config.participant) {
+        ConfigField(
+            label = "Participant",
+            value = config.participant,
+            testTag = "kaigi.config.participant_name"
+        ) {
             onConfigChange { current -> current.copy(participant = it) }
         }
-        ConfigField("Participant ID (optional)", config.participantId.orEmpty()) {
+        ConfigField(
+            label = "Participant ID (optional)",
+            value = config.participantId.orEmpty(),
+            testTag = "kaigi.config.participant_id"
+        ) {
             onConfigChange { current ->
                 current.copy(participantId = it.trim().ifEmpty { null })
             }
@@ -384,6 +420,7 @@ private fun ConfigEditor(
         PolicyToggle(
             label = "Require Signed Moderation",
             checked = config.requireSignedModeration,
+            testTag = "kaigi.config.require_signed_moderation",
             onCheckedChange = { checked ->
                 onConfigChange { current -> current.copy(requireSignedModeration = checked) }
             }
@@ -391,6 +428,7 @@ private fun ConfigEditor(
         PolicyToggle(
             label = "Require Payment Settlement",
             checked = config.requirePaymentSettlement,
+            testTag = "kaigi.config.require_payment_settlement",
             onCheckedChange = { checked ->
                 onConfigChange { current -> current.copy(requirePaymentSettlement = checked) }
             }
@@ -398,6 +436,7 @@ private fun ConfigEditor(
         PolicyToggle(
             label = "Fallback On Policy Failure",
             checked = config.preferWebFallbackOnPolicyFailure,
+            testTag = "kaigi.config.prefer_web_fallback",
             onCheckedChange = { checked ->
                 onConfigChange { current -> current.copy(preferWebFallbackOnPolicyFailure = checked) }
             }
@@ -406,26 +445,42 @@ private fun ConfigEditor(
 }
 
 @Composable
-private fun ConfigField(label: String, value: String, onValueChange: (String) -> Unit) {
+private fun ConfigField(
+    label: String,
+    value: String,
+    testTag: String,
+    onValueChange: (String) -> Unit
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
         singleLine = true
     )
 }
 
 @Composable
-private fun PolicyToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun PolicyToggle(
+    label: String,
+    checked: Boolean,
+    testTag: String,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = Color.White, fontSize = 13.sp)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(testTag)
+        )
     }
 }
 
@@ -442,8 +497,12 @@ private fun FallbackScreen(url: String, recoveryMode: Boolean, onClose: () -> Un
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Web Fallback", fontWeight = FontWeight.Bold)
-            Button(onClick = onClose) {
+            Text(
+                "Web Fallback",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("kaigi.fallback.title")
+            )
+            Button(onClick = onClose, modifier = Modifier.testTag("kaigi.fallback.close")) {
                 Text(if (recoveryMode) "Recover Native" else "Close")
             }
         }

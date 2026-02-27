@@ -60,6 +60,7 @@ declare -a SCENARIOS=(
   "WEB-BUILD-002|npm --prefix clients/web run test"
   "WEB-BUILD-003|npm --prefix clients/web run build"
   "WEB-BUILD-004|npm --prefix clients/web run test:smoke"
+  "WEB-BUILD-005|npm --prefix clients/web run test:e2e"
 )
 
 for entry in "${SCENARIOS[@]}"; do

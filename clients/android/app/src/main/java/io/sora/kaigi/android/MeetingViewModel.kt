@@ -24,7 +24,7 @@ data class MeetingUiState(
 )
 
 class MeetingViewModel(
-    private val savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
     private val transport: ProtocolTransport = OkHttpProtocolTransport(),
     private val reducer: ProtocolReducer = DefaultProtocolReducer(),
     private val telemetrySink: MeetingTelemetrySink = NoOpMeetingTelemetrySink,

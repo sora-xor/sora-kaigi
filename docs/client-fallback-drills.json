@@ -58,6 +58,17 @@
       "owner": "macos-client-oncall"
     },
     {
+      "workspace_id": "tvos",
+      "platform": "tvOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 30,
+      "validation_command": "npm run test:web-smoke -- --browser=safari",
+      "cadence": "every-release-train",
+      "owner": "tvos-client-oncall"
+    },
+    {
       "workspace_id": "visionos",
       "platform": "visionOS",
       "fallback_workspace": "web",
@@ -67,6 +78,17 @@
       "validation_command": "npm run test:web-smoke -- --browser=safari",
       "cadence": "every-release-train",
       "owner": "visionos-client-oncall"
+    },
+    {
+      "workspace_id": "watchos",
+      "platform": "watchOS",
+      "fallback_workspace": "web",
+      "distribution_channel": "app-store-connect",
+      "drill_trigger": "native-release-blocking-regression",
+      "max_rto_minutes": 30,
+      "validation_command": "npm run test:web-smoke -- --browser=safari",
+      "cadence": "every-release-train",
+      "owner": "watchos-client-oncall"
     },
     {
       "workspace_id": "windows",

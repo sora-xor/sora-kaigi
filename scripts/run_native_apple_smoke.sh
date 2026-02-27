@@ -27,6 +27,12 @@ else
   ALLOW_SIMULATOR_SKIPS="1"
 fi
 
+if [[ -n "${NATIVE_APPLE_SMOKE_APPEND_REPORT+x}" ]]; then
+  NATIVE_APPLE_SMOKE_APPEND_REPORT="${NATIVE_APPLE_SMOKE_APPEND_REPORT}"
+else
+  NATIVE_APPLE_SMOKE_APPEND_REPORT="0"
+fi
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --out-dir)
@@ -39,7 +45,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --help|-h)
       cat <<'EOF'
-Usage: bash scripts/run_native_apple_smoke.sh [--out-dir <path>] [--platform all|macos|ios|ipados|visionos] [--skip-xcodegen] [out_dir]
+Usage: bash scripts/run_native_apple_smoke.sh [--out-dir <path>] [--platform all|macos|ios|ipados|visionos|tvos|watchos] [--skip-xcodegen] [out_dir]
+Env:
+  NATIVE_APPLE_SMOKE_APPEND_REPORT=1   append to existing log/report instead of starting fresh
 EOF
       exit 0
       ;;
@@ -74,7 +82,7 @@ if [[ -n "${POSITIONAL_OUT_DIR}" ]]; then
   OUT_DIR="${POSITIONAL_OUT_DIR}"
 fi
 
-if [[ "${PLATFORM}" != "all" && "${PLATFORM}" != "macos" && "${PLATFORM}" != "ios" && "${PLATFORM}" != "ipados" && "${PLATFORM}" != "visionos" ]]; then
+if [[ "${PLATFORM}" != "all" && "${PLATFORM}" != "macos" && "${PLATFORM}" != "ios" && "${PLATFORM}" != "ipados" && "${PLATFORM}" != "visionos" && "${PLATFORM}" != "tvos" && "${PLATFORM}" != "watchos" ]]; then
   echo "Unsupported --platform value: ${PLATFORM}" >&2
   exit 2
 fi
@@ -102,11 +110,36 @@ mkdir -p "${OUT_DIR}"
 LOG_FILE="${OUT_DIR}/native-apple-smoke.log"
 REPORT_FILE="${OUT_DIR}/native-apple-smoke-report.json"
 SUITE_ID="NATIVE-APPLE-SMOKE"
+LOCK_DIR="${OUT_DIR}/.native-apple-smoke.lock"
+
+acquired_lock=0
+cleanup_lock() {
+  if [[ "${acquired_lock}" == "1" ]]; then
+    rmdir "${LOCK_DIR}" 2>/dev/null || true
+  fi
+}
+trap cleanup_lock EXIT
+
+if mkdir "${LOCK_DIR}" 2>/dev/null; then
+  acquired_lock=1
+else
+  echo "error: another run_native_apple_smoke.sh instance is already writing to ${OUT_DIR}; use a different --out-dir or wait for it to finish" >&2
+  exit 2
+fi
 
 started_epoch="$(date -u +%s)"
 started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-: >"${LOG_FILE}"
+if [[ "${NATIVE_APPLE_SMOKE_APPEND_REPORT}" == "1" ]]; then
+  touch "${LOG_FILE}"
+  {
+    echo
+    echo "----- run started ${started_at} platform=${PLATFORM} -----"
+  } >> "${LOG_FILE}"
+else
+  : >"${LOG_FILE}"
+  echo "----- run started ${started_at} platform=${PLATFORM} -----" >> "${LOG_FILE}"
+fi
 status="passed"
 results_json=""
 
@@ -177,13 +210,17 @@ PY
 ios_udid=""
 ipad_udid=""
 vision_udid=""
+tv_udid=""
+watch_udid=""
 vision_runtime_available=1
 ios_suite_skip=0
 ipados_suite_skip=0
 vision_suite_skip=0
+tv_suite_skip=0
+watch_suite_skip=0
 
 requires_simulator=0
-if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "ios" || "${PLATFORM}" == "ipados" ]]; then
+if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "ios" || "${PLATFORM}" == "ipados" || "${PLATFORM}" == "tvos" || "${PLATFORM}" == "watchos" ]]; then
   requires_simulator=1
 fi
 if [[ "${SKIP_VISIONOS}" != "1" && ( "${PLATFORM}" == "all" || "${PLATFORM}" == "visionos" ) ]]; then
@@ -193,9 +230,11 @@ fi
 if [[ "${requires_simulator}" == "1" ]]; then
   if ! xcrun simctl list devices available --json >/dev/null 2>&1; then
     if [[ "${ALLOW_SIMULATOR_SKIPS}" == "1" && "${PLATFORM}" == "all" ]]; then
-      echo "warning: CoreSimulatorService unavailable; skipping iOS/iPadOS/visionOS suites (ALLOW_SIMULATOR_SKIPS=1)" | tee -a "${LOG_FILE}"
+      echo "warning: CoreSimulatorService unavailable; skipping iOS/iPadOS/tvOS/watchOS/visionOS suites (ALLOW_SIMULATOR_SKIPS=1)" | tee -a "${LOG_FILE}"
       ios_suite_skip=1
       ipados_suite_skip=1
+      tv_suite_skip=1
+      watch_suite_skip=1
       vision_suite_skip=1
       vision_runtime_available=0
     else
@@ -229,6 +268,36 @@ if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "ipados" ]]; then
         ipados_suite_skip=1
       else
         echo "error: no available iPad simulator found" | tee -a "${LOG_FILE}"
+        status="failed"
+      fi
+    fi
+  fi
+fi
+
+if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "tvos" ]]; then
+  if [[ "${tv_suite_skip}" != "1" ]]; then
+    tv_udid="$(find_sim_udid "tvos" "apple tv")"
+    if [[ -z "${tv_udid}" ]]; then
+      if [[ "${ALLOW_SIMULATOR_SKIPS}" == "1" && "${PLATFORM}" == "all" ]]; then
+        echo "warning: no available Apple TV simulator found; skipping tvOS suite" | tee -a "${LOG_FILE}"
+        tv_suite_skip=1
+      else
+        echo "error: no available Apple TV simulator found" | tee -a "${LOG_FILE}"
+        status="failed"
+      fi
+    fi
+  fi
+fi
+
+if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "watchos" ]]; then
+  if [[ "${watch_suite_skip}" != "1" ]]; then
+    watch_udid="$(find_sim_udid "watchos" "apple watch")"
+    if [[ -z "${watch_udid}" ]]; then
+      if [[ "${ALLOW_SIMULATOR_SKIPS}" == "1" && "${PLATFORM}" == "all" ]]; then
+        echo "warning: no available Apple Watch simulator found; skipping watchOS suite" | tee -a "${LOG_FILE}"
+        watch_suite_skip=1
+      else
+        echo "error: no available Apple Watch simulator found" | tee -a "${LOG_FILE}"
         status="failed"
       fi
     fi
@@ -279,12 +348,36 @@ run_case() {
   local scenario_id="$1"
   shift
   local scenario_status="passed"
+  local attempt=1
+  local max_attempts="${XCODEBUILD_AUTOMATION_TIMEOUT_RETRY_ATTEMPTS:-2}"
+  local retry_pattern="Timed out while enabling automation mode"
 
-  echo "=== ${scenario_id} :: $* ===" | tee -a "${LOG_FILE}"
-  if ! "$@" 2>&1 | tee -a "${LOG_FILE}"; then
+  if ! [[ "${max_attempts}" =~ ^[0-9]+$ ]] || [[ "${max_attempts}" -lt 1 ]]; then
+    max_attempts=1
+  fi
+
+  while true; do
+    local attempt_log
+    attempt_log="$(mktemp "${TMPDIR:-/tmp}/native-apple-${scenario_id}-XXXX.log")"
+
+    echo "=== ${scenario_id} (attempt ${attempt}/${max_attempts}) :: $* ===" | tee -a "${LOG_FILE}"
+    if "$@" 2>&1 | tee -a "${LOG_FILE}" | tee "${attempt_log}"; then
+      rm -f "${attempt_log}"
+      break
+    fi
+
+    if [[ "${attempt}" -lt "${max_attempts}" ]] && rg -Fq "${retry_pattern}" "${attempt_log}"; then
+      echo "warning: ${scenario_id} hit XCTest automation timeout; retrying" | tee -a "${LOG_FILE}"
+      rm -f "${attempt_log}"
+      attempt=$((attempt + 1))
+      continue
+    fi
+
     scenario_status="failed"
     status="failed"
-  fi
+    rm -f "${attempt_log}"
+    break
+  done
 
   append_result "${scenario_id}" "${scenario_status}"
 }
@@ -327,27 +420,152 @@ if [[ "${status}" == "passed" ]]; then
       append_result "APPLE-BUILD-004" "skipped"
     fi
   fi
+
+  if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "tvos" ]]; then
+    if [[ "${tv_suite_skip}" == "1" ]]; then
+      append_result "APPLE-BUILD-005" "skipped"
+    else
+      run_case "APPLE-BUILD-005" xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiTVOS -destination "id=${tv_udid}"
+    fi
+  fi
+
+  if [[ "${PLATFORM}" == "all" || "${PLATFORM}" == "watchos" ]]; then
+    if [[ "${watch_suite_skip}" == "1" ]]; then
+      append_result "APPLE-BUILD-006" "skipped"
+    else
+      run_case "APPLE-BUILD-006" xcodebuild test -workspace Kaigi.xcworkspace -scheme KaigiWatchOS -destination "id=${watch_udid}"
+    fi
+  fi
 fi
 
 finished_epoch="$(date -u +%s)"
 finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 duration_seconds=$((finished_epoch - started_epoch))
 
-cat >"${REPORT_FILE}" <<EOF_JSON
-{
-  "suite_id": "${SUITE_ID}",
-  "status": "${status}",
-  "started_at": "${started_at}",
-  "finished_at": "${finished_at}",
-  "duration_seconds": ${duration_seconds},
-  "log_file": "${LOG_FILE}",
-  "results": [${results_json}]
+python3 - "${REPORT_FILE}" "${SUITE_ID}" "${LOG_FILE}" "${started_at}" "${finished_at}" "${duration_seconds}" "${status}" "${results_json}" "${NATIVE_APPLE_SMOKE_APPEND_REPORT}" <<'PY'
+import json
+import os
+import sys
+from datetime import datetime
+from typing import Optional
+
+
+def parse_ts(value: object) -> Optional[datetime]:
+    if not isinstance(value, str) or not value:
+        return None
+    normalized = value
+    if value.endswith("Z"):
+        normalized = value[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+
+
+def parse_results(raw: str) -> list[dict]:
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(f"[{raw}]")
+    except json.JSONDecodeError:
+        return []
+    return [item for item in parsed if isinstance(item, dict)]
+
+
+(
+    report_path,
+    suite_id,
+    log_file,
+    run_started_at,
+    run_finished_at,
+    run_duration_seconds,
+    run_status,
+    run_results_raw,
+    append_report,
+) = sys.argv[1:]
+
+existing_report: dict = {}
+if append_report == "1" and os.path.exists(report_path):
+    try:
+        with open(report_path, "r", encoding="utf-8") as handle:
+            loaded = json.load(handle)
+            if isinstance(loaded, dict):
+                existing_report = loaded
+    except (OSError, json.JSONDecodeError):
+        existing_report = {}
+
+merged_results: dict[str, dict] = {}
+for entry in existing_report.get("results", []):
+    if isinstance(entry, dict):
+        scenario_id = entry.get("scenario_id")
+        if isinstance(scenario_id, str) and scenario_id:
+            merged_results[scenario_id] = entry
+
+for entry in parse_results(run_results_raw):
+    scenario_id = entry.get("scenario_id")
+    if isinstance(scenario_id, str) and scenario_id:
+        merged_results[scenario_id] = entry
+
+results = sorted(merged_results.values(), key=lambda item: item.get("scenario_id", ""))
+
+existing_started_at = existing_report.get("started_at")
+run_started_dt = parse_ts(run_started_at)
+existing_started_dt = parse_ts(existing_started_at)
+if run_started_dt and existing_started_dt:
+    started_at = existing_started_at if existing_started_dt <= run_started_dt else run_started_at
+elif existing_started_dt:
+    started_at = existing_started_at
+else:
+    started_at = run_started_at
+
+finished_at = run_finished_at if run_finished_at else existing_report.get("finished_at", run_started_at)
+started_dt = parse_ts(started_at)
+finished_dt = parse_ts(finished_at)
+if started_dt and finished_dt:
+    duration_seconds = max(0, int((finished_dt - started_dt).total_seconds()))
+else:
+    try:
+        duration_seconds = int(run_duration_seconds)
+    except ValueError:
+        duration_seconds = int(existing_report.get("duration_seconds", 0) or 0)
+
+status_values = [str(entry.get("status", "")) for entry in results]
+overall_status = "passed"
+if run_status == "failed" or "failed" in status_values:
+    overall_status = "failed"
+elif status_values and all(value == "skipped" for value in status_values):
+    overall_status = "skipped"
+
+payload = {
+    "suite_id": suite_id,
+    "status": overall_status,
+    "started_at": started_at,
+    "finished_at": finished_at,
+    "duration_seconds": duration_seconds,
+    "log_file": log_file,
+    "results": results,
 }
-EOF_JSON
+
+with open(report_path, "w", encoding="utf-8") as handle:
+    json.dump(payload, handle, indent=2)
+    handle.write("\n")
+PY
 
 echo "Native Apple smoke status: ${status}"
 echo "Native Apple smoke report: ${REPORT_FILE}"
 
-if [[ "${status}" != "passed" ]]; then
+suite_status="$(python3 - "${REPORT_FILE}" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    payload = json.load(handle)
+print(payload.get("status", "failed"))
+PY
+)"
+
+echo "Native Apple smoke aggregated status: ${suite_status}"
+
+if [[ "${suite_status}" == "failed" ]]; then
   exit 1
 fi

@@ -1,12 +1,14 @@
-# Apple Native Tracks (iOS, iPadOS, visionOS, macOS)
+# Apple Native Tracks (iOS, iPadOS, tvOS, watchOS, visionOS, macOS)
 
 Shared Apple-native implementation lives under `clients/apple/` and is consumed
 by platform app targets/schemes:
 
-- `KaigiIOS` (`clients/ios/`)
-- `KaigiIPadOS` (`clients/ipados/`)
-- `KaigiVisionOS` (`clients/visionos/`)
-- `KaigiMacOS` (`clients/macos/`)
+- `KaigiIOS` (`clients/apple/iOS/`)
+- `KaigiIPadOS` (`clients/apple/iPadOS/`)
+- `KaigiTVOS` (`clients/apple/tvOS/`)
+- `KaigiWatchOS` (`clients/apple/watchOS/`)
+- `KaigiVisionOS` (`clients/apple/visionOS/`)
+- `KaigiMacOS` (`clients/apple/macOS/`)
 
 ## Runtime Config Schema
 
@@ -44,11 +46,25 @@ Apple shared runtime also surfaces platform media lifecycle hooks:
 `MeetingDashboardView` wires these to AVAudioSession notifications (iOS/visionOS) and macOS
 screen-capture capability preflight checks.
 
+## Platform-Specific UX
+
+- tvOS:
+  - Siri Remote Play/Pause toggles connect/disconnect in the dashboard.
+  - Embedded web fallback is intentionally unavailable; `Open Web Fallback` stays disabled and
+    policy-triggered fallback remains in-app (status/log notice) without presenting a sheet.
+- watchOS:
+  - The dashboard uses a compact controls-first layout so connect/disconnect controls are
+    reachable without deep scrolling.
+  - Embedded web fallback is intentionally unavailable; `Open Web Fallback` stays disabled and
+    policy-triggered fallback remains in-app (status/log notice) without presenting a sheet.
+
 ## Local Validation
 
 ```bash
 bash scripts/run_native_apple_smoke.sh --platform ios --out-dir target/conformance --skip-xcodegen
 bash scripts/run_native_apple_smoke.sh --platform ipados --out-dir target/conformance --skip-xcodegen
+bash scripts/run_native_apple_smoke.sh --platform tvos --out-dir target/conformance --skip-xcodegen
+bash scripts/run_native_apple_smoke.sh --platform watchos --out-dir target/conformance --skip-xcodegen
 bash scripts/run_native_apple_smoke.sh --platform visionos --out-dir target/conformance --skip-xcodegen
 bash scripts/run_native_apple_smoke.sh --platform macos --out-dir target/conformance --skip-xcodegen
 ```
@@ -57,7 +73,7 @@ CI default:
 - `scripts/run_native_apple_smoke.sh` skips `visionOS` when `CI=true`.
 - Set `SKIP_VISIONOS=0` to explicitly enable the visionOS suite in CI.
 - Outside CI, `ALLOW_SIMULATOR_SKIPS` defaults to `1` for `--platform all`; when
-  CoreSimulator discovery is unavailable, iOS/iPadOS/visionOS suites are marked
+  CoreSimulator discovery is unavailable, iOS/iPadOS/tvOS/watchOS/visionOS suites are marked
   `skipped` instead of failing the whole run.
 - Set `ALLOW_SIMULATOR_SKIPS=0` to enforce strict local simulator availability.
 

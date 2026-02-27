@@ -13,6 +13,14 @@ Mandatory tracks:
 - `clients/android`
 - `clients/linux`
 
+Implemented Apple-native supplemental surfaces:
+
+- `clients/apple/tvOS`
+- `clients/apple/watchOS`
+
+These are validated in Apple native smoke/UI suites (`APPLE-BUILD-005`/`APPLE-BUILD-006`) and are
+represented as supplemental native workspace rows in `docs/client-app-workspaces.json`.
+
 The machine-readable source of truth for these tracks is
 `docs/client-app-workspaces.json`.
 

@@ -14,6 +14,7 @@ struct MeetingDashboardView: View {
     @StateObject private var audioSession = AudioSessionObserver()
     @StateObject private var screenCapture = ScreenCaptureCapabilityObserver()
     @State private var showFallbackSheet = false
+    @State private var didApplyUITestOverrides = false
 
     let platformTitle: String
 
@@ -27,18 +28,11 @@ struct MeetingDashboardView: View {
                 )
                 .ignoresSafeArea()
 
-                VStack(spacing: 16) {
-                    header
-                    configCard
-                    sessionPolicyCard
-                    controlRow
-                    logCard
-                }
-                .padding(16)
+                dashboardContent
             }
             .navigationTitle("Kaigi \(platformTitle)")
             .onChange(of: session.shouldShowFallback) { _, shouldShow in
-                if shouldShow {
+                if shouldShow && canPresentFallbackSheet {
                     showFallbackSheet = true
                 }
             }
@@ -84,7 +78,20 @@ struct MeetingDashboardView: View {
             .task {
                 session.onConnectivityChanged(available: connectivity.available)
                 screenCapture.refresh()
+                if !didApplyUITestOverrides {
+                    didApplyUITestOverrides = true
+                    applyUITestOverridesIfNeeded()
+                }
             }
+#if os(tvOS)
+            .onPlayPauseCommand {
+                if session.isConnected {
+                    session.disconnect()
+                } else if session.config.isJoinable {
+                    session.connect()
+                }
+            }
+#endif
             .sheet(isPresented: $showFallbackSheet, onDismiss: {
                 if session.shouldShowFallback {
                     session.recoverFromFallback()
@@ -99,33 +106,86 @@ struct MeetingDashboardView: View {
         }
     }
 
+    @ViewBuilder
+    private var dashboardContent: some View {
+#if os(watchOS)
+        ScrollView {
+            VStack(spacing: 12) {
+                header
+                controlRow
+                sessionPolicyCard
+                configCard
+                logCard
+                    .frame(minHeight: 120, maxHeight: 180)
+            }
+            .padding(12)
+        }
+#else
+        VStack(spacing: 16) {
+            header
+            configCard
+            sessionPolicyCard
+            controlRow
+            logCard
+        }
+        .padding(16)
+#endif
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Direct Nexus Meeting Shell")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(headerTitleFont)
                 .foregroundStyle(.white)
+                .accessibilityIdentifier("kaigi.header.title")
             Text("Status: \(session.transportState)")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(headerStatusFont)
                 .foregroundStyle(session.isConnected ? Color.green : Color.orange)
+                .accessibilityIdentifier("kaigi.status.label")
+            if shouldShowUnsupportedFallbackNotice {
+                Text("Fallback active. Embedded fallback is unavailable on \(platformTitle).")
+                    .font(.system(size: 12, weight: .regular, design: .rounded))
+                    .foregroundStyle(.orange.opacity(0.95))
+                    .accessibilityIdentifier("kaigi.status.fallback_notice")
+            }
             if let error = session.lastErrorMessage {
                 Text("Last Error: \(error)")
                     .font(.system(size: 12, weight: .regular, design: .rounded))
                     .foregroundStyle(.red.opacity(0.95))
+                    .accessibilityIdentifier("kaigi.status.last_error")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var headerTitleFont: Font {
+#if os(watchOS)
+        .system(size: 18, weight: .bold, design: .rounded)
+#elseif os(tvOS)
+        .system(size: 34, weight: .bold, design: .rounded)
+#else
+        .system(size: 28, weight: .bold, design: .rounded)
+#endif
+    }
+
+    private var headerStatusFont: Font {
+#if os(watchOS)
+        .system(size: 12, weight: .semibold, design: .rounded)
+#else
+        .system(size: 14, weight: .semibold, design: .rounded)
+#endif
+    }
+
     private var configCard: some View {
         VStack(spacing: 10) {
-            editorField("Signaling URL", text: $session.config.signalingURLText)
-            editorField("Fallback URL", text: $session.config.fallbackURLText)
-            editorField("Room ID", text: $session.config.roomID)
-            editorField("Participant", text: $session.config.participantName)
-            editorField("Participant ID (optional)", text: participantIDBinding)
-            policyToggle("Require Signed Moderation", value: $session.config.requireSignedModeration)
-            policyToggle("Require Payment Settlement", value: $session.config.requirePaymentSettlement)
-            policyToggle("Fallback On Policy Failure", value: $session.config.preferWebFallbackOnPolicyFailure)
+            editorField("Signaling URL", text: $session.config.signalingURLText, identifier: "kaigi.config.signaling_url")
+            editorField("Fallback URL", text: $session.config.fallbackURLText, identifier: "kaigi.config.fallback_url")
+            editorField("Room ID", text: $session.config.roomID, identifier: "kaigi.config.room_id")
+            editorField("Participant", text: $session.config.participantName, identifier: "kaigi.config.participant_name")
+            editorField("Participant ID (optional)", text: participantIDBinding, identifier: "kaigi.config.participant_id")
+            policyToggle("Require Signed Moderation", value: $session.config.requireSignedModeration, identifier: "kaigi.config.require_signed_moderation")
+            policyToggle("Require Payment Settlement", value: $session.config.requirePaymentSettlement, identifier: "kaigi.config.require_payment_settlement")
+            policyToggle("Fallback On Policy Failure", value: $session.config.preferWebFallbackOnPolicyFailure, identifier: "kaigi.config.prefer_web_fallback")
         }
         .padding(14)
         .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -135,7 +195,7 @@ struct MeetingDashboardView: View {
         )
     }
 
-    private func editorField(_ title: String, text: Binding<String>) -> some View {
+    private func editorField(_ title: String, text: Binding<String>, identifier: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -148,23 +208,30 @@ struct MeetingDashboardView: View {
                 .foregroundStyle(.white)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+                .accessibilityIdentifier(identifier)
 #else
             TextField(title, text: text)
                 .textFieldStyle(.plain)
                 .padding(10)
                 .background(.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .foregroundStyle(.white)
+                .accessibilityIdentifier(identifier)
 #endif
         }
     }
 
-    private func policyToggle(_ title: String, value: Binding<Bool>) -> some View {
+    private func policyToggle(_ title: String, value: Binding<Bool>, identifier: String) -> some View {
         Toggle(isOn: value) {
             Text(title)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.9))
         }
+#if os(tvOS)
+        .toggleStyle(.automatic)
+#else
         .toggleStyle(.switch)
+#endif
+        .accessibilityIdentifier(identifier)
     }
 
     private var participantIDBinding: Binding<String> {
@@ -184,7 +251,10 @@ struct MeetingDashboardView: View {
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             sessionLine("roomLocked=\(yesNo(sessionState.roomLocked)) waitingRoom=\(yesNo(sessionState.waitingRoomEnabled)) guestPolicy=\(sessionState.guestPolicy.rawValue)")
-            sessionLine("e2eeRequired=\(yesNo(sessionState.e2eeRequired)) maxParticipants=\(sessionState.maxParticipants) policyEpoch=\(sessionState.policyEpoch)")
+            Text("e2eeRequired=\(yesNo(sessionState.e2eeRequired)) maxParticipants=\(sessionState.maxParticipants) policyEpoch=\(sessionState.policyEpoch)")
+                .font(.system(size: 12, weight: .regular, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.9))
+                .accessibilityIdentifier("kaigi.session.e2ee_line")
             sessionLine("recording=\(sessionState.recordingNotice.state.rawValue) media=\(sessionState.mediaProfile.preferredProfile.rawValue)/\(sessionState.mediaProfile.negotiatedProfile.rawValue)")
             sessionLine("paymentRequired=\(yesNo(sessionState.payment.required)) settlement=\(sessionState.payment.settlementStatus.rawValue)")
             if let destination = sessionState.payment.destination {
@@ -206,27 +276,57 @@ struct MeetingDashboardView: View {
             .foregroundStyle(.white.opacity(0.9))
     }
 
+    @ViewBuilder
     private var controlRow: some View {
-        HStack(spacing: 10) {
-            Button(session.isConnected ? "Reconnect" : "Connect") {
-                session.connect()
+#if os(watchOS)
+        VStack(spacing: 8) {
+            connectButton
+            HStack(spacing: 8) {
+                pingButton
+                disconnectButton
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!session.config.isJoinable)
-
-            Button("Ping") { session.sendPing() }
-                .buttonStyle(.bordered)
-                .disabled(!session.isConnected)
-
-            Button("Disconnect") { session.disconnect() }
-                .buttonStyle(.bordered)
-                .disabled(!session.isConnected)
-
-            Button("Open Web Fallback") { showFallbackSheet = true }
-                .buttonStyle(.bordered)
-                .disabled(session.config.fallbackURL == nil)
+            fallbackButton
         }
         .tint(.mint)
+#else
+        HStack(spacing: 10) {
+            connectButton
+            pingButton
+            disconnectButton
+            fallbackButton
+        }
+        .tint(.mint)
+#endif
+    }
+
+    private var connectButton: some View {
+        Button(session.isConnected ? "Reconnect" : "Connect") {
+            session.connect()
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(!session.config.isJoinable)
+        .accessibilityIdentifier("kaigi.controls.connect")
+    }
+
+    private var pingButton: some View {
+        Button("Ping") { session.sendPing() }
+            .buttonStyle(.bordered)
+            .disabled(!session.isConnected)
+            .accessibilityIdentifier("kaigi.controls.ping")
+    }
+
+    private var disconnectButton: some View {
+        Button("Disconnect") { session.disconnect() }
+            .buttonStyle(.bordered)
+            .disabled(!session.isConnected)
+            .accessibilityIdentifier("kaigi.controls.disconnect")
+    }
+
+    private var fallbackButton: some View {
+        Button("Open Web Fallback") { showFallbackSheet = true }
+            .buttonStyle(.bordered)
+            .disabled(session.config.fallbackURL == nil || !supportsEmbeddedFallback)
+            .accessibilityIdentifier("kaigi.controls.open_fallback")
     }
 
     private var logCard: some View {
@@ -261,6 +361,43 @@ struct MeetingDashboardView: View {
 
     private func yesNo(_ value: Bool) -> String {
         value ? "yes" : "no"
+    }
+
+    private var canPresentFallbackSheet: Bool {
+        session.config.fallbackURL != nil && supportsEmbeddedFallback
+    }
+
+    private var shouldShowUnsupportedFallbackNotice: Bool {
+        session.shouldShowFallback && !canPresentFallbackSheet
+    }
+
+    private func applyUITestOverridesIfNeeded() {
+#if DEBUG
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["KAIGI_UI_TEST_TRIGGER_POLICY_FAILURE"] == "1" else {
+            return
+        }
+
+        var updatedConfig = session.config
+        updatedConfig.preferWebFallbackOnPolicyFailure = true
+        if updatedConfig.fallbackURL == nil {
+            updatedConfig.fallbackURLText = "https://fallback.example.com"
+        }
+        session.config = updatedConfig
+
+        session.simulatePolicyFailureForTesting(
+            code: environment["KAIGI_UI_TEST_POLICY_CODE"] ?? "policy_reject",
+            message: environment["KAIGI_UI_TEST_POLICY_MESSAGE"] ?? "blocked by policy"
+        )
+#endif
+    }
+
+    private var supportsEmbeddedFallback: Bool {
+#if canImport(WebKit) && (os(macOS) || canImport(UIKit))
+        true
+#else
+        false
+#endif
     }
 }
 

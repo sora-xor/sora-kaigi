@@ -27,6 +27,7 @@ on:
       - gradlew
       - scripts/run_native_*smoke.sh
       - scripts/run_web_client_smoke.sh
+      - scripts/run_client_ui_e2e_smoke.sh
       - scripts/run_linux_client_smoke.sh
       - scripts/run_windows_client_smoke.sh
       - scripts/run_native_ops_handoff_package.sh
@@ -69,6 +70,8 @@ on:
       - docs/ga-approvals.json
       - docs/release-playbook.md
       - docs/rollback-playbook.md
+      - docs/parity-matrix.md
+      - docs/test-plan.md
       - .github/workflows/native-ga-readiness.yml
   push:
     branches:
@@ -91,6 +94,7 @@ on:
       - gradlew
       - scripts/run_native_*smoke.sh
       - scripts/run_web_client_smoke.sh
+      - scripts/run_client_ui_e2e_smoke.sh
       - scripts/run_linux_client_smoke.sh
       - scripts/run_windows_client_smoke.sh
       - scripts/run_native_ops_handoff_package.sh
@@ -133,6 +137,8 @@ on:
       - docs/ga-approvals.json
       - docs/release-playbook.md
       - docs/rollback-playbook.md
+      - docs/parity-matrix.md
+      - docs/test-plan.md
       - .github/workflows/native-ga-readiness.yml
 
 jobs:
@@ -195,7 +201,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Apple native smoke gates
+      - name: Run Apple native smoke gates (macOS/iOS/iPadOS/tvOS/watchOS)
         shell: bash
         run: |
           set -euo pipefail
@@ -306,7 +312,7 @@ jobs:
             echo "- Linux client smoke gates: passed"
             echo "- Web dependency audit gate (moderate+): passed"
             echo "- Android native smoke gates: passed"
-            echo "- Apple native smoke gates (macOS, iOS, iPadOS): passed"
+            echo "- Apple native smoke gates (macOS, iOS, iPadOS, tvOS, watchOS): passed"
             echo "- visionOS smoke gates: intentionally skipped in CI by policy"
             echo "- Windows client smoke gates: passed"
             echo "- Native release/fallback/readiness contract gates: passed"

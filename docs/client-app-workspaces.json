@@ -3,29 +3,16 @@
   "frozen_at": "2026-02-15",
   "workspaces": [
     {
-      "id": "web",
-      "implementation": "web",
-      "path": "clients/web",
-      "platforms": [
-        "Web Chromium",
-        "Web Safari",
-        "Web Firefox"
-      ],
-      "build_system": "TypeScript + WebRTC",
-      "artifact": "IPFS web bundle",
-      "hdr_strategy": "Runtime capability negotiation with deterministic SDR fallback"
-    },
-    {
-      "id": "macos",
+      "id": "android",
       "implementation": "native",
-      "path": "clients/macos",
+      "path": "clients/android",
       "platforms": [
-        "macOS"
+        "Android"
       ],
       "web_fallback_workspace": "web",
-      "build_system": "Swift + Xcode",
-      "artifact": "Signed .app/.dmg",
-      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+      "build_system": "Kotlin + NDK",
+      "artifact": "APK/AAB release",
+      "hdr_strategy": "Camera2/Codec HDR when supported, SDR fallback otherwise"
     },
     {
       "id": "ios",
@@ -52,6 +39,42 @@
       "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
     },
     {
+      "id": "linux",
+      "implementation": "native",
+      "path": "clients/linux",
+      "platforms": [
+        "Linux"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Rust + GTK4",
+      "artifact": "Signed package",
+      "hdr_strategy": "Compositor-dependent HDR with deterministic SDR fallback"
+    },
+    {
+      "id": "macos",
+      "implementation": "native",
+      "path": "clients/macos",
+      "platforms": [
+        "macOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "Signed .app/.dmg",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
+      "id": "tvos",
+      "implementation": "native",
+      "path": "clients/apple/tvOS",
+      "platforms": [
+        "tvOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "App Store/TestFlight build",
+      "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
+    },
+    {
       "id": "visionos",
       "implementation": "native",
       "path": "clients/visionos",
@@ -64,6 +87,31 @@
       "hdr_strategy": "AVFoundation HDR when supported, SDR fallback otherwise"
     },
     {
+      "id": "watchos",
+      "implementation": "native",
+      "path": "clients/apple/watchOS",
+      "platforms": [
+        "watchOS"
+      ],
+      "web_fallback_workspace": "web",
+      "build_system": "Swift + Xcode",
+      "artifact": "App Store/TestFlight companion build",
+      "hdr_strategy": "Deterministic SDR fallback with policy-compatible transport controls"
+    },
+    {
+      "id": "web",
+      "implementation": "web",
+      "path": "clients/web",
+      "platforms": [
+        "Web Chromium",
+        "Web Safari",
+        "Web Firefox"
+      ],
+      "build_system": "TypeScript + WebRTC",
+      "artifact": "IPFS web bundle",
+      "hdr_strategy": "Runtime capability negotiation with deterministic SDR fallback"
+    },
+    {
       "id": "windows",
       "implementation": "native",
       "path": "clients/windows",
@@ -74,30 +122,6 @@
       "build_system": "WinUI 3 + C#",
       "artifact": "Signed installer",
       "hdr_strategy": "DXGI/Media Foundation HDR when supported, SDR fallback otherwise"
-    },
-    {
-      "id": "android",
-      "implementation": "native",
-      "path": "clients/android",
-      "platforms": [
-        "Android"
-      ],
-      "web_fallback_workspace": "web",
-      "build_system": "Kotlin + NDK",
-      "artifact": "APK/AAB release",
-      "hdr_strategy": "Camera2/Codec HDR when supported, SDR fallback otherwise"
-    },
-    {
-      "id": "linux",
-      "implementation": "native",
-      "path": "clients/linux",
-      "platforms": [
-        "Linux"
-      ],
-      "web_fallback_workspace": "web",
-      "build_system": "Rust + GTK4",
-      "artifact": "Signed package",
-      "hdr_strategy": "Compositor-dependent HDR with deterministic SDR fallback"
     }
   ]
 }

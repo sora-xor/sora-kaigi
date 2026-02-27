@@ -184,6 +184,9 @@ Media profile contract note:
 
 1. `PLATFORM-001` Mandatory platform coverage
 - Contract includes Web Chromium, Web Safari, Web Firefox, macOS, iOS, iPadOS, visionOS, Windows, Android, and Linux.
+- tvOS and watchOS are tracked as supplemental Apple-native surfaces in
+  `docs/client-app-workspaces.json`; they are validated by Apple smoke suites but are outside the
+  mandatory parity gate matrix in `docs/parity-matrix.md`.
 
 2. `PLATFORM-002` Native web fallback enforcement
 - Every native platform contract requires browser fallback support coverage.
@@ -203,8 +206,8 @@ Media profile contract note:
 
 7. `PLATFORM-007` Client app workspace contract
 - Machine-readable client workspace contract (`docs/client-app-workspaces.json`) must define
-  implementation tracks for Web Chromium/Safari/Firefox and native macOS/iOS/iPadOS/visionOS/Windows/
-  Android/Linux.
+  implementation tracks for Web Chromium/Safari/Firefox and native macOS/iOS/iPadOS/tvOS/watchOS/
+  visionOS/Windows/Android/Linux.
 - Every workspace path must exist with a track README, and native tracks must reference the web
   fallback workspace contract.
 
@@ -259,12 +262,12 @@ Media profile contract note:
 ## Suite H: Release Operations
 
 1. `OPS-001` Release playbook completeness
-- Release playbook documents native platform tracks (macOS, iOS, iPadOS, visionOS, Windows, Android, Linux)
+- Release playbook documents native platform tracks (macOS, iOS, iPadOS, tvOS, watchOS, visionOS, Windows, Android, Linux)
   and IPFS-hosted web release flow (Web Chromium, Web Safari, Web Firefox).
 - Release playbook includes build/signing, launch checklist, and post-release verification stages.
 
 2. `OPS-002` Rollback playbook completeness
-- Rollback playbook documents native rollback tracks (macOS, iOS, iPadOS, visionOS, Windows, Android, Linux)
+- Rollback playbook documents native rollback tracks (macOS, iOS, iPadOS, tvOS, watchOS, visionOS, Windows, Android, Linux)
   and IPFS-hosted web rollback flow (Web Chromium, Web Safari, Web Firefox).
 - Rollback playbook includes trigger conditions, incident communication, and rollback exit criteria.
 
@@ -427,7 +430,11 @@ Media profile contract note:
 - `bash scripts/run_web_client_smoke.sh`
   - Produces `target/conformance/web-client-smoke-report.json` and
     `web-client-smoke.log`.
-  - Executes web client install/build/test/smoke commands for the Web Chromium/Safari/Firefox track.
+  - Executes web client install/build/test/smoke commands plus Playwright browser UI E2E for the Web Chromium/Safari/Firefox track.
+- `bash scripts/run_client_ui_e2e_smoke.sh`
+  - Produces `target/conformance/client-ui-e2e-smoke-report.json` and
+    `client-ui-e2e-smoke.log`.
+  - Runs Web + Android + Apple UI E2E-oriented smoke suites in one command.
 - `bash scripts/run_linux_client_smoke.sh`
   - Produces `target/conformance/linux-client-smoke-report.json` and
     `linux-client-smoke.log`.
