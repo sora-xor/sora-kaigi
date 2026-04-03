@@ -154,7 +154,10 @@ pub fn platform_contract(platform: TargetPlatform) -> PlatformContract {
 }
 
 pub fn all_platform_contracts() -> Vec<PlatformContract> {
-    TARGET_PLATFORMS.into_iter().map(platform_contract).collect()
+    TARGET_PLATFORMS
+        .into_iter()
+        .map(platform_contract)
+        .collect()
 }
 
 #[cfg(test)]

@@ -2,9 +2,9 @@
 
 Video + audio conferencing built on Kaigi over Sora Nexus / SoraNet powered by Hyperledger Iroha 3.
 
-This repo is intentionally split into small building blocks. Right now the focus is on the
-networking “spine” (SoraNet relay handshake + Kaigi stream open) so we can test the end-to-end
-plumbing before UI/audio/video work.
+This repo is intentionally split into small building blocks. The networking “spine” (SoraNet relay
+handshake + Kaigi stream open) is now wired to an experimental console conferencing runtime with
+ASCII-rendered video and synthetic A/V media frames for end-to-end transport testing.
 
 ## Current Status
 
@@ -12,7 +12,8 @@ plumbing before UI/audio/video work.
   `../iroha/tools/soranet-relay`) + Kaigi stream open frame (34-byte header).
 - `kaigi-wire`: framed control-plane protocol (`u32(be) len` + Norito payload) carried over a Kaigi
   stream (roster/events/chat/participant state + dev payment signalling), plus anonymous-mode
-  encrypted control envelopes and escrow proof frames.
+  encrypted control envelopes, media capability/track/media payload frames, and anonymous
+  group-encrypted media envelopes.
 - `kaigi-hub-echo`: WebSocket “hub adapter” dev harness that accepts the relay’s Kaigi handshake
   (`KaigiStreamOpen`, Norito-encoded), groups connections by `room_id`, and broadcasts
   roster/events/chat.
@@ -29,11 +30,15 @@ plumbing before UI/audio/video work.
   - Default session policy requires E2EE bootstrap (`E2EEKeyEpoch`) before plaintext chat/state
     control frames are accepted.
   - Anonymous mode (`privacy=zk`): blind relay behavior for encrypted control payloads + key-update
-    fanout + escrow proof acknowledgements, with stale-proof disconnect guard
+    fanout + hub-driven anonymous group key rotation + encrypted media envelope fanout + escrow
+    proof acknowledgements, with stale-proof disconnect guard
     (`--anon-escrow-proof-max-stale-secs`).
 - `kaigi-cli`: demo tool: connect to a relay, open a Kaigi stream, and talk to the hub.
   - `relay-echo`: send `Hello`/`Chat`/`Ping`, print received frames (smoke test).
-  - `room-chat`: interactive room chat (`/mic`, `/video`, `/share`, `/rate`, `/maxshare`, `/mute*`, `/videooff`, `/shareoff`, `/kick`, `/admit`, `/deny`, `/cohost`, `/uncohost`, `/host`, `/lock`, `/waiting`, `/guests`, `/recordlocal`, `/e2eerequired`, `/maxparticipants`, `/devicecap`, `/profile`, `/recordstart`, `/recordstop`, `/e2eekey`, `/e2eeack`, `/end` host-only, `/pay`, `/quit`).
+  - `room-chat`: conference runtime (default) with keyboard media controls and optional fullscreen
+    ASCII TUI (`--tui`). Legacy slash-command chat is still available via hidden `--legacy-ui`.
+  - `ascii-live`: cyberpunk console renderer alias for `room-chat --tui`.
+  - `ascii-play`: local video-file -> ASCII cyberpunk renderer (ffmpeg-backed, no relay required).
   - `make-join-link` / `decode-join-link`: shareable room routing links (`kaigi://join?...`) with optional Torii/billing/lifecycle metadata.
   - `platform-contract`: emits frozen browser/native parity contract JSON (`all` or `--platform <target>`).
   - `kaigi-lifecycle`: wrapper for `iroha app kaigi` (`create`, `join`, `leave`, `end`, `record-usage`) with ZK/privacy payload passthrough fields.
@@ -93,10 +98,10 @@ cargo run -p kaigi-hub-echo -- \
 2. Start a `soranet-relay` (from `../iroha`) configured to route `kaigi_stream.hub_ws_url` to
    `ws://127.0.0.1:9000` and with a provisioned Kaigi route for your chosen `channel_id`.
 
-3. Connect (interactive room chat):
+3. Connect (cyberpunk ASCII conference TUI):
 
 ```bash
-cargo run -p kaigi-cli -- room-chat \
+cargo run -p kaigi-cli -- ascii-live \
   --relay 127.0.0.1:5000 \
   --torii http://127.0.0.1:8080 \
   --server-name localhost \
@@ -107,6 +112,37 @@ cargo run -p kaigi-cli -- room-chat \
   --pay-iroha-config ../iroha/demo/alice.toml \
   --pay-to <billing-account-id>
 ```
+
+`ascii-live` is equivalent to `room-chat --tui`.
+`ascii-live` controls: `m` mic, `v` camera, `s` screen share, `p` pause,
+`a` adaptive override cycle, `0..4` direct adaptive mode (`0=AUTO`, `1=BOOST`, `2=WARM`,
+`3=BAL`, `4=SAFE`), `c` cyberpunk theme cycle, `t` auto theme-cycle toggle, `d` density-cycle, `b` luma boost-cycle, `g` glitch toggle, `j` datamosh toggle, `n` noise overlay toggle, `e` edge-enhance toggle, `w` worst-feed sort toggle, `x` telemetry reset, `+/-` density,
+`r` rain-overlay toggle, `k` snapshot export, `left/right/up/down` focus, `tab` advanced HUD, `h` help-overlay toggle, `q` quit, `End` end-call.
+The HUD includes a live status strip with quality classification, RTT, RX/TX media rates,
+and estimated RX loss/jitter. Each participant feed also shows a per-peer quality bar,
+video loss, and jitter summary. The synthetic sender adapts video cadence/quantizer based on
+measured network quality (`BOOST`/`WARM`/`BAL`/`SAFE`) with optional manual override, and applies
+matching adaptive audio pacing/gain tiers. `tab` toggles an advanced HUD section with adaptive
+cycle legend, live RX/TX/ping counters, a quality trend sparkline, and top worst peers.
+`c` rotates built-in neon palettes (`MATRIX`, `NEON-ICE`, `SYNTHWAVE`, `BLADE`) in real time.
+TUI startup includes a short neon boot sequence before the live dashboard appears.
+
+Local file playback (no relay/hub):
+
+```bash
+cargo run -p kaigi-cli -- ascii-play \
+  --input ./demo.mp4 \
+  --fps 18 \
+  --width 96 \
+  --height 54 \
+  --density 2 \
+  --theme 2 \
+  --glitch
+```
+
+`ascii-play` requires `ffmpeg` (or `--ffmpeg-bin <path>`), and supports `--loop` for endless playback.
+During playback: `c` cycles themes, `t` toggles auto theme-cycle, `d` cycles density presets, `b` cycles luma boost profiles, `+/-` adjusts density, `g` toggles glitch, `j` toggles datamosh row-shift, `n` toggles static noise overlay, `e` toggles edge-enhance, `r` toggles rain overlay, `k` writes a snapshot, `p` pauses, `q` quits.
+Snapshots are saved under `ascii-snapshots/` as timestamped `.txt` files.
 
 4. Optional: generate a shareable join link and use it instead of passing relay/channel manually:
 
@@ -140,7 +176,7 @@ cargo run -p kaigi-cli -- room-chat \
   --display-name "Bob"
 ```
 
-HDR note: `room-chat` auto-detects HDR display capability (macOS best-effort) unless
+HDR note: `room-chat` / `ascii-live` auto-detect HDR display capability (macOS best-effort) unless
 `--no-hdr-auto` is passed. `--hdr-display` / `--hdr-capture` remain explicit overrides.
 
 Audio note: there is no separate “connect to audio” flow; audio path is active on join.
@@ -357,8 +393,9 @@ Lifecycle hex args accept optional `0x`/`0X` prefixes and are normalized before 
 
 - `room-chat` automatically switches to anonymous mode when `kaigi_privacy_mode` resolves to `zk`
   (`zk`, `zk_roster_v1`, or `zk-roster-v1`; from flag, env, or join link metadata).
-- Anonymous mode uses opaque participant handles, X25519 key updates, and encrypted control
-  envelopes (`EncryptedControl`).
+- Anonymous mode uses opaque participant handles, X25519 key updates, encrypted control
+  envelopes (`EncryptedControl`), hub-managed group key rotations (`AnonGroupKeyRotate`),
+  and encrypted media envelopes (`AnonEncryptedPayload`).
   - Anonymous participant handles must be non-empty, ASCII, <= 128 chars, and must not include
     `@` or whitespace/control characters.
   - Hub enforces monotonic `GroupKeyUpdate.epoch` per sender to reject stale key replays.
@@ -368,6 +405,9 @@ Lifecycle hex args accept optional `0x`/`0X` prefixes and are normalized before 
   - Hub rejects implausibly short encrypted ciphertext payloads (< 32 hex chars).
   - Hub caps encrypted fanout to 256 recipients per `EncryptedControl` frame.
   - Hub rejects encrypted recipient handles not present in the current anonymous roster.
+  - Hub rejects plaintext media capability/track/video/audio frames in anonymous rooms.
+  - Hub rotates and rebroadcasts anonymous media group key material when anonymous membership
+    changes (join/leave).
   - Hub caps anonymous participants per room (default 256, configurable via `--anon-max-participants`).
   - Hub logs anonymous admission rejections with a per-room rejection counter.
 - Optional shielded prepay flow:

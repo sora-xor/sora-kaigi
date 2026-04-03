@@ -6,6 +6,8 @@ Status:
 
 - Frozen on 2026-02-15 for M0 implementation.
 - Post-freeze changes must be additive or require explicit protocol version negotiation.
+- Implemented additive extension on 2026-02-28 for media transport and anonymous group media
+  envelopes in the dev harness baseline.
 
 ## Goals
 
@@ -15,8 +17,9 @@ Status:
 
 ## Versioning
 
-- Current protocol remains accepted for existing harness clients.
-- vNext introduces additive frame types first.
+- Current dev harness baseline is `PROTOCOL_VERSION=6`.
+- v6 keeps existing control-plane behavior and adds media + anonymous group envelope frame types.
+- `MAX_FRAME_LEN` is increased to `2 MiB` for encoded media payload carriage.
 - Breaking wire changes require a new protocol version negotiation flag in the stream-open handshake.
 
 ## New Control Frames (Frozen)
@@ -74,6 +77,34 @@ All frames continue to use `u32(be) length + Norito payload`.
 - Purpose: signed moderation command envelope for host/co-host actions, while preserving legacy
   unsigned `Moderation` compatibility during transition.
 
+13. `MediaCapability`
+- Fields: `reported_at_ms`, `participant_id`, `max_video_width`, `max_video_height`,
+  `max_video_fps`, `video_codecs[]`, `audio_codecs[]`, `audio_sample_rate`, `audio_channels`
+- Purpose: endpoint media encode/decode capability declaration for conference fanout.
+
+14. `MediaTrackState`
+- Fields: `updated_at_ms`, `participant_id`, `mic_enabled`, `camera_enabled`,
+  `screen_share_enabled`, `active_video_track`
+- Purpose: explicit media track-state synchronization separate from legacy `ParticipantState`.
+
+15. `VideoSegment`
+- Fields: `sent_at_ms`, `participant_id`, `segment_number`, `frame_width`, `frame_height`,
+  `frame_duration_ns`, `payload`
+- Purpose: encoded Norito baseline video segment transport.
+
+16. `AudioPacket`
+- Fields: `sent_at_ms`, `participant_id`, `sequence`, `sample_rate`, `channels`, `frame_samples`,
+  `payload`
+- Purpose: encoded Norito native audio frame transport.
+
+17. `AnonGroupKeyRotate`
+- Fields: `sent_at_ms`, `epoch`, `key_wrap_hex`, `member_handles[]`
+- Purpose: hub-managed anonymous group media key rotation notice.
+
+18. `AnonEncryptedPayload`
+- Fields: `sent_at_ms`, `sender_handle`, `epoch`, `kind`, `nonce_hex`, `ciphertext_hex`
+- Purpose: anonymous group-encrypted envelope for media/control payload fanout.
+
 ## Join Link Schema (`kaigi://join?...`) (Frozen)
 
 Required query parameters (all versions):
@@ -127,6 +158,8 @@ Validation rules:
 - Hub rejects replay/stale action frames via per-signer monotonic timestamp checks on
   `sent_at_ms` (`Moderation`, `E2EEKeyEpoch`) and `issued_at_ms`/`updated_at_ms`
   (`RoleGrant`, `RoleRevoke`, `SessionPolicy`).
+- Anonymous group payloads require valid envelope metadata (`nonce_hex` = 24-byte nonce,
+  hex-encoded ciphertext) and sender-handle binding.
 - Participant identities are unique per room; duplicate claims and post-join identity mutation are rejected.
 - Guest users cannot self-escalate roles.
 - `RecordingNotice(state=started)` is rejected when session policy disables local recording.
@@ -150,6 +183,12 @@ Validation rules:
 - For `MediaProfileNegotiation`, preserve HDR only when sender capability includes
   `hdr_capture=true` and at least one joined remote participant reports `hdr_render=true`;
   otherwise coerce `negotiated_profile` to `Sdr` and broadcast without failing the session.
+- Reject client-originated `AnonGroupKeyRotate`; hub is authoritative for group media key
+  rotation broadcasts.
+- In anonymous rooms, reject plaintext `MediaCapability` / `MediaTrackState` /
+  `VideoSegment` / `AudioPacket`; media must use `AnonEncryptedPayload`.
+- Validate media payload metadata (`participant_id` binding, non-zero dimensions/rates, bounded
+  payload shape) before broadcast fanout.
 - Enforce `max_screen_shares` on `ParticipantState.screen_share_enabled=true`; when capacity is
   exhausted, keep sender share state disabled and return a deterministic denial error.
 - `ModerationAction::Kick` sends an explicit target error frame before close signaling in the dev

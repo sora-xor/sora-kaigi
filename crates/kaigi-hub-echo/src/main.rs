@@ -12,16 +12,16 @@ use anyhow::{Context as _, Result, anyhow};
 use clap::Parser;
 use futures_util::{SinkExt as _, StreamExt as _};
 use kaigi_wire::{
-    AnonHelloFrame, AnonRosterEntry, AnonRosterFrame, ChatFrame, DeviceCapabilityFrame,
-    E2EEKeyEpochFrame, EncryptedControlFrame, ErrorFrame, EscrowAckFrame, EscrowProofFrame,
-    FrameDecoder, GroupKeyUpdateFrame, HelloFrame, KaigiFrame,
-    MAX_ANON_PARTICIPANT_HANDLE_LEN, MAX_ESCROW_ID_LEN, MAX_ESCROW_PROOF_HEX_LEN,
-    MediaProfileKind, MediaProfileNegotiationFrame, ModerationAction, ModerationFrame,
+    AnonGroupKeyRotateFrame, AnonHelloFrame, AnonRosterEntry, AnonRosterFrame, ChatFrame,
+    DeviceCapabilityFrame, E2EEKeyEpochFrame, EncryptedControlFrame, ErrorFrame, EscrowAckFrame,
+    EscrowProofFrame, FrameDecoder, GroupKeyUpdateFrame, HelloFrame, KaigiFrame,
+    MAX_ANON_PARTICIPANT_HANDLE_LEN, MAX_ESCROW_ID_LEN, MAX_ESCROW_PROOF_HEX_LEN, MediaProfileKind,
+    MediaProfileNegotiationFrame, MediaTrackKind, ModerationAction, ModerationFrame,
     ModerationSignedFrame, ModerationTarget, PROTOCOL_VERSION, ParticipantLeftFrame,
     ParticipantPresenceDeltaFrame, ParticipantSnapshot, PaymentAckFrame, PermissionsSnapshotFrame,
     RecordingNoticeFrame, RecordingState, RoleChangeEntry, RoleGrantFrame, RoleKind,
-    RoleRevokeFrame, RoomConfigFrame, RoomEventFrame, RosterEntry, RosterFrame,
-    SessionPolicyFrame, encode_framed,
+    RoleRevokeFrame, RoomConfigFrame, RoomEventFrame, RosterEntry, RosterFrame, SessionPolicyFrame,
+    encode_framed,
 };
 #[cfg(test)]
 use kaigi_wire::{KeyRotationAckFrame, ParticipantStateFrame};
@@ -450,7 +450,9 @@ async fn handle_disconnect(state: &HubState, room_id: RoomId, conn_id: ConnId) -
                 room.permissions_epoch = room.permissions_epoch.saturating_add(1);
                 host_changed = true;
             }
-            if !room.anonymous_mode && let Some(ref participant_id) = left_id {
+            if !room.anonymous_mode
+                && let Some(ref participant_id) = left_id
+            {
                 room.presence_sequence = room.presence_sequence.saturating_add(1);
                 presence_delta = Some(ParticipantPresenceDeltaFrame {
                     at_ms: now_ms(),
@@ -490,6 +492,14 @@ async fn handle_disconnect(state: &HubState, room_id: RoomId, conn_id: ConnId) -
             });
             broadcast_frame(state, &room_id, &update).await?;
         }
+        let rotate = {
+            let mut rooms = state.rooms.lock().await;
+            let Some(room) = rooms.get_mut(&room_id) else {
+                return Ok(());
+            };
+            build_anon_group_key_rotate_frame(room, now_ms())
+        };
+        broadcast_frame(state, &room_id, &KaigiFrame::AnonGroupKeyRotate(rotate)).await?;
     } else if let Some(participant_id) = left_participant_id {
         let at_ms = now_ms();
         let event = KaigiFrame::Event(RoomEventFrame::Left(ParticipantLeftFrame {
@@ -498,7 +508,12 @@ async fn handle_disconnect(state: &HubState, room_id: RoomId, conn_id: ConnId) -
         }));
         broadcast_frame(state, &room_id, &event).await?;
         if let Some(delta) = presence_delta {
-            broadcast_frame(state, &room_id, &KaigiFrame::ParticipantPresenceDelta(delta)).await?;
+            broadcast_frame(
+                state,
+                &room_id,
+                &KaigiFrame::ParticipantPresenceDelta(delta),
+            )
+            .await?;
         }
     }
 
@@ -657,7 +672,7 @@ async fn handle_frame(
             }
 
             let mut anon_cap_rejection_count: Option<u64> = None;
-            let (roster, update, mode_error, surcharge_applied) = {
+            let (roster, update, rotate, mode_error, surcharge_applied) = {
                 let mut rooms = state.rooms.lock().await;
                 let Some(room) = rooms.get_mut(&room_id) else {
                     return Ok(());
@@ -665,12 +680,12 @@ async fn handle_frame(
                 if let Some(handle_error) =
                     validate_anon_participant_handle(room, conn_id, &hello.participant_handle)
                 {
-                    (None, None, Some(handle_error), None)
+                    (None, None, None, Some(handle_error), None)
                 } else if let Some(cap_error) =
                     validate_anonymous_room_capacity(room, conn_id, state.anon_max_participants)
                 {
                     anon_cap_rejection_count = Some(record_anon_admission_rejection(room));
-                    (None, None, Some(cap_error), None)
+                    (None, None, None, Some(cap_error), None)
                 } else if !room.anonymous_mode {
                     let transparent_hello_seen = room
                         .participants
@@ -678,6 +693,7 @@ async fn handle_frame(
                         .any(|p| p.state.hello_seen && !p.state.anonymous_mode);
                     if transparent_hello_seen {
                         (
+                            None,
                             None,
                             None,
                             Some("room is already in transparent mode".to_string()),
@@ -689,7 +705,7 @@ async fn handle_frame(
                             base_rate,
                             state.billing.anon_zk_extra_fee_per_minute_nano,
                         ) {
-                            Err(err) => (None, None, Some(err), None),
+                            Err(err) => (None, None, None, Some(err), None),
                             Ok(effective_rate) => {
                                 let Some(participant) = room.participants.get_mut(&conn_id) else {
                                     return Ok(());
@@ -698,7 +714,7 @@ async fn handle_frame(
                                 if let Err(err) =
                                     apply_anon_hello_state(&mut participant.state, &hello, now)
                                 {
-                                    (None, None, Some(err), None)
+                                    (None, None, None, Some(err), None)
                                 } else {
                                     let epoch = participant.state.x25519_epoch;
                                     room.rate_per_minute_nano = effective_rate;
@@ -710,9 +726,11 @@ async fn handle_frame(
                                         x25519_pubkey_hex: hello.x25519_pubkey_hex.clone(),
                                         epoch,
                                     };
+                                    let rotate = build_anon_group_key_rotate_frame(room, now);
                                     (
                                         Some(roster),
                                         Some(update),
+                                        Some(rotate),
                                         None,
                                         (base_rate != effective_rate)
                                             .then_some((base_rate, effective_rate)),
@@ -727,7 +745,7 @@ async fn handle_frame(
                     };
                     let now = now_ms();
                     if let Err(err) = apply_anon_hello_state(&mut participant.state, &hello, now) {
-                        (None, None, Some(err), None)
+                        (None, None, None, Some(err), None)
                     } else {
                         let epoch = participant.state.x25519_epoch;
                         let roster = anon_roster_frame_locked(room);
@@ -737,7 +755,8 @@ async fn handle_frame(
                             x25519_pubkey_hex: hello.x25519_pubkey_hex.clone(),
                             epoch,
                         };
-                        (Some(roster), Some(update), None, None)
+                        let rotate = build_anon_group_key_rotate_frame(room, now);
+                        (Some(roster), Some(update), Some(rotate), None, None)
                     }
                 }
             };
@@ -762,6 +781,9 @@ async fn handle_frame(
             }
             if let Some(update) = update {
                 broadcast_frame(state, &room_id, &KaigiFrame::GroupKeyUpdate(update)).await?;
+            }
+            if let Some(rotate) = rotate {
+                broadcast_frame(state, &room_id, &KaigiFrame::AnonGroupKeyRotate(rotate)).await?;
             }
             if let Some((base_rate, effective_rate)) = surcharge_applied {
                 info!(
@@ -937,8 +959,7 @@ async fn handle_frame(
             // Enforce "mic/cam/share off on join".
             let forced_off = enforce_join_media_defaults(&mut hello);
 
-            let (snapshot, mode_conflict, join_denied_reason, waiting_room_notice, presence_delta) =
-                {
+            let (snapshot, mode_conflict, join_denied_reason, waiting_room_notice, presence_delta) = {
                 let mut rooms = state.rooms.lock().await;
                 let room = rooms
                     .get_mut(&room_id)
@@ -958,7 +979,8 @@ async fn handle_frame(
                         None,
                         None,
                     )
-                } else if let Some(reason) = validate_join_allowed(room, conn_id, &hello.participant_id)
+                } else if let Some(reason) =
+                    validate_join_allowed(room, conn_id, &hello.participant_id)
                 {
                     (
                         ParticipantSnapshot {
@@ -1090,8 +1112,12 @@ async fn handle_frame(
             )
             .await?;
             if let Some(delta) = presence_delta {
-                broadcast_frame(state, &room_id, &KaigiFrame::ParticipantPresenceDelta(delta))
-                    .await?;
+                broadcast_frame(
+                    state,
+                    &room_id,
+                    &KaigiFrame::ParticipantPresenceDelta(delta),
+                )
+                .await?;
             }
 
             // Broadcast room config (host, rate, etc).
@@ -1228,6 +1254,249 @@ async fn handle_frame(
             )
             .await?;
         }
+        KaigiFrame::MediaCapability(cap) => {
+            if room_is_anonymous(state, room_id).await {
+                send_error(
+                    state,
+                    room_id,
+                    conn_id,
+                    "anonymous mode rejects plaintext media capabilities".to_string(),
+                )
+                .await?;
+                return Ok(());
+            }
+            let mut error: Option<String> = None;
+            {
+                let rooms = state.rooms.lock().await;
+                let Some(room) = rooms.get(&room_id) else {
+                    return Ok(());
+                };
+                let Some(sender) = room.participants.get(&conn_id) else {
+                    return Ok(());
+                };
+                if !sender.state.hello_seen {
+                    error = Some("send Hello first".to_string());
+                } else if sender.state.participant_id != cap.participant_id {
+                    error = Some("participant_id must match sender participant_id".to_string());
+                } else if cap.max_video_width == 0
+                    || cap.max_video_height == 0
+                    || cap.max_video_fps == 0
+                {
+                    error = Some("media capability dimensions/fps must be > 0".to_string());
+                } else if cap.audio_sample_rate == 0 || cap.audio_channels == 0 {
+                    error = Some("audio sample rate/channels must be > 0".to_string());
+                }
+            }
+            if let Some(message) = error {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            broadcast_frame(state, &room_id, &KaigiFrame::MediaCapability(cap)).await?;
+        }
+        KaigiFrame::MediaTrackState(track) => {
+            if room_is_anonymous(state, room_id).await {
+                send_error(
+                    state,
+                    room_id,
+                    conn_id,
+                    "anonymous mode rejects plaintext media track states".to_string(),
+                )
+                .await?;
+                return Ok(());
+            }
+            if let Some(message) = validate_plaintext_e2ee_gate(state, room_id, conn_id).await {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            let at_ms = now_ms();
+            let mut error: Option<String> = None;
+            let mut snapshot: Option<ParticipantSnapshot> = None;
+            {
+                let mut rooms = state.rooms.lock().await;
+                let Some(room) = rooms.get_mut(&room_id) else {
+                    return Ok(());
+                };
+                let Some(sender) = room.participants.get(&conn_id) else {
+                    return Ok(());
+                };
+                if !sender.state.hello_seen {
+                    error = Some("send Hello first".to_string());
+                } else if sender.state.participant_id != track.participant_id {
+                    error = Some("participant_id must match sender participant_id".to_string());
+                }
+                if error.is_none()
+                    && let Some(participant) = room.participants.get_mut(&conn_id)
+                {
+                    participant.state.mic_enabled = track.mic_enabled;
+                    match track.active_video_track {
+                        MediaTrackKind::Camera => {
+                            participant.state.video_enabled = track.camera_enabled;
+                            participant.state.screen_share_enabled = false;
+                        }
+                        MediaTrackKind::ScreenShare => {
+                            participant.state.video_enabled = false;
+                            participant.state.screen_share_enabled = track.screen_share_enabled;
+                        }
+                    }
+                    snapshot = Some(participant_snapshot_from_state(&participant.state, at_ms));
+                }
+            }
+            if let Some(message) = error {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            broadcast_frame(state, &room_id, &KaigiFrame::MediaTrackState(track)).await?;
+            if let Some(snapshot) = snapshot {
+                broadcast_frame(
+                    state,
+                    &room_id,
+                    &KaigiFrame::Event(RoomEventFrame::StateUpdated(snapshot)),
+                )
+                .await?;
+            }
+        }
+        KaigiFrame::VideoSegment(segment) => {
+            if room_is_anonymous(state, room_id).await {
+                send_error(
+                    state,
+                    room_id,
+                    conn_id,
+                    "anonymous mode requires encrypted media payloads".to_string(),
+                )
+                .await?;
+                return Ok(());
+            }
+            if let Some(message) = validate_plaintext_e2ee_gate(state, room_id, conn_id).await {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            let mut error: Option<String> = None;
+            {
+                let rooms = state.rooms.lock().await;
+                let Some(room) = rooms.get(&room_id) else {
+                    return Ok(());
+                };
+                let Some(sender) = room.participants.get(&conn_id) else {
+                    return Ok(());
+                };
+                if !sender.state.hello_seen {
+                    error = Some("send Hello first".to_string());
+                } else if sender.state.participant_id != segment.participant_id {
+                    error = Some("participant_id must match sender participant_id".to_string());
+                } else if segment.frame_width == 0
+                    || segment.frame_height == 0
+                    || segment.frame_duration_ns == 0
+                {
+                    error = Some(
+                        "video segment frame_width/frame_height/frame_duration_ns must be > 0"
+                            .to_string(),
+                    );
+                } else if segment.payload.is_empty() {
+                    error = Some("video segment payload must not be empty".to_string());
+                }
+            }
+            if let Some(message) = error {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            broadcast_frame(state, &room_id, &KaigiFrame::VideoSegment(segment)).await?;
+        }
+        KaigiFrame::AudioPacket(packet) => {
+            if room_is_anonymous(state, room_id).await {
+                send_error(
+                    state,
+                    room_id,
+                    conn_id,
+                    "anonymous mode requires encrypted media payloads".to_string(),
+                )
+                .await?;
+                return Ok(());
+            }
+            if let Some(message) = validate_plaintext_e2ee_gate(state, room_id, conn_id).await {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            let mut error: Option<String> = None;
+            {
+                let rooms = state.rooms.lock().await;
+                let Some(room) = rooms.get(&room_id) else {
+                    return Ok(());
+                };
+                let Some(sender) = room.participants.get(&conn_id) else {
+                    return Ok(());
+                };
+                if !sender.state.hello_seen {
+                    error = Some("send Hello first".to_string());
+                } else if sender.state.participant_id != packet.participant_id {
+                    error = Some("participant_id must match sender participant_id".to_string());
+                } else if packet.sample_rate == 0
+                    || packet.channels == 0
+                    || packet.frame_samples == 0
+                {
+                    error = Some(
+                        "audio packet sample_rate/channels/frame_samples must be > 0".to_string(),
+                    );
+                } else if packet.payload.is_empty() {
+                    error = Some("audio packet payload must not be empty".to_string());
+                }
+            }
+            if let Some(message) = error {
+                send_error(state, room_id, conn_id, message).await?;
+                return Ok(());
+            }
+            broadcast_frame(state, &room_id, &KaigiFrame::AudioPacket(packet)).await?;
+        }
+        KaigiFrame::AnonGroupKeyRotate(_) => {
+            send_error(
+                state,
+                room_id,
+                conn_id,
+                "anonymous group-key rotation frames are hub-managed".to_string(),
+            )
+            .await?;
+        }
+        KaigiFrame::AnonEncryptedPayload(enc) => {
+            let mut send_error_msg: Option<String> = None;
+            let mut should_broadcast = false;
+            {
+                let rooms = state.rooms.lock().await;
+                let Some(room) = rooms.get(&room_id) else {
+                    return Ok(());
+                };
+                if !room.anonymous_mode {
+                    send_error_msg = Some(
+                        "anonymous encrypted payloads require anonymous room mode".to_string(),
+                    );
+                } else if !is_valid_hex_len(&enc.nonce_hex, 24) {
+                    send_error_msg = Some("nonce_hex must be 24-byte hex".to_string());
+                } else if !is_valid_hex(&enc.ciphertext_hex) {
+                    send_error_msg = Some("ciphertext_hex must be valid hex".to_string());
+                } else if let Some(participant) = room.participants.get(&conn_id) {
+                    if !participant.state.hello_seen || !participant.state.anonymous_mode {
+                        send_error_msg = Some("send AnonHello first".to_string());
+                    } else if participant.state.participant_handle.as_deref()
+                        != Some(enc.sender_handle.as_str())
+                    {
+                        send_error_msg = Some(
+                            "anonymous encrypted sender_handle does not match connection"
+                                .to_string(),
+                        );
+                    } else if enc.epoch == 0 {
+                        send_error_msg = Some("epoch must be >= 1".to_string());
+                    } else {
+                        should_broadcast = true;
+                    }
+                }
+            }
+
+            if let Some(msg) = send_error_msg {
+                send_error(state, room_id, conn_id, msg).await?;
+                return Ok(());
+            }
+            if should_broadcast {
+                broadcast_frame(state, &room_id, &KaigiFrame::AnonEncryptedPayload(enc)).await?;
+            }
+        }
         KaigiFrame::RoomConfigUpdate(update) => {
             if room_is_anonymous(state, room_id).await {
                 send_error(
@@ -1355,8 +1624,12 @@ async fn handle_frame(
                 broadcast_permissions_snapshots(state, room_id).await?;
             }
             if let Some(delta) = presence_delta {
-                broadcast_frame(state, &room_id, &KaigiFrame::ParticipantPresenceDelta(delta))
-                    .await?;
+                broadcast_frame(
+                    state,
+                    &room_id,
+                    &KaigiFrame::ParticipantPresenceDelta(delta),
+                )
+                .await?;
             }
         }
         KaigiFrame::RoleRevoke(revoke) => {
@@ -1412,8 +1685,12 @@ async fn handle_frame(
                 broadcast_permissions_snapshots(state, room_id).await?;
             }
             if let Some(delta) = presence_delta {
-                broadcast_frame(state, &room_id, &KaigiFrame::ParticipantPresenceDelta(delta))
-                    .await?;
+                broadcast_frame(
+                    state,
+                    &room_id,
+                    &KaigiFrame::ParticipantPresenceDelta(delta),
+                )
+                .await?;
             }
         }
         KaigiFrame::SessionPolicy(update) => {
@@ -1691,8 +1968,11 @@ async fn handle_frame(
                             current_epoch, ack.ack_epoch
                         ));
                     } else {
-                        let last_acked_epoch =
-                            room.key_rotation_ack_epochs.get(&conn_id).copied().unwrap_or(0);
+                        let last_acked_epoch = room
+                            .key_rotation_ack_epochs
+                            .get(&conn_id)
+                            .copied()
+                            .unwrap_or(0);
                         if ack.ack_epoch <= last_acked_epoch {
                             error = Some(format!(
                                 "ack_epoch must increase: last={} got={} (stale/replay rejected)",
@@ -2065,13 +2345,14 @@ async fn process_moderation_frame(
                         }
                     }
                 }
-                ModerationAction::DenyFromWaiting => match deny_waiting_participant(room, *target_conn_id)
-                {
-                    Ok(denied_id) => denied_participants.push((target_tx.clone(), denied_id)),
-                    Err(err) => {
-                        moderation_error.get_or_insert(err);
+                ModerationAction::DenyFromWaiting => {
+                    match deny_waiting_participant(room, *target_conn_id) {
+                        Ok(denied_id) => denied_participants.push((target_tx.clone(), denied_id)),
+                        Err(err) => {
+                            moderation_error.get_or_insert(err);
+                        }
                     }
-                },
+                }
             }
         }
     }
@@ -2113,9 +2394,21 @@ async fn process_moderation_frame(
         let roster = roster_frame(state, room_id).await?;
         send_frame_to(state, room_id, outcome.conn_id, &KaigiFrame::Roster(roster)).await?;
         let cfg = room_config_frame(state, room_id).await?;
-        send_frame_to(state, room_id, outcome.conn_id, &KaigiFrame::RoomConfig(cfg)).await?;
+        send_frame_to(
+            state,
+            room_id,
+            outcome.conn_id,
+            &KaigiFrame::RoomConfig(cfg),
+        )
+        .await?;
         let policy = session_policy_frame(state, room_id).await?;
-        send_frame_to(state, room_id, outcome.conn_id, &KaigiFrame::SessionPolicy(policy)).await?;
+        send_frame_to(
+            state,
+            room_id,
+            outcome.conn_id,
+            &KaigiFrame::SessionPolicy(policy),
+        )
+        .await?;
     }
     if matches!(action, ModerationAction::AdmitFromWaiting) {
         broadcast_permissions_snapshots(state, room_id).await?;
@@ -2162,7 +2455,10 @@ fn role_kind_for_conn(room: &RoomState, conn_id: ConnId) -> RoleKind {
 }
 
 fn can_moderate_conn(room: &RoomState, conn_id: ConnId) -> bool {
-    matches!(role_kind_for_conn(room, conn_id), RoleKind::Host | RoleKind::CoHost)
+    matches!(
+        role_kind_for_conn(room, conn_id),
+        RoleKind::Host | RoleKind::CoHost
+    )
 }
 
 fn can_manage_roles_and_policy(room: &RoomState, conn_id: ConnId) -> bool {
@@ -2292,13 +2588,9 @@ fn validate_join_allowed(
     conn_id: ConnId,
     participant_id: &str,
 ) -> Option<String> {
-    if room
-        .participants
-        .get(&conn_id)
-        .is_some_and(|participant| {
-            participant.state.hello_seen && participant.state.participant_id != participant_id
-        })
-    {
+    if room.participants.get(&conn_id).is_some_and(|participant| {
+        participant.state.hello_seen && participant.state.participant_id != participant_id
+    }) {
         return Some("participant_id cannot change after Hello".to_string());
     }
     if room.participants.iter().any(|(id, participant)| {
@@ -2490,7 +2782,8 @@ fn apply_role_grant(
             let mut permissions_changed = room
                 .co_host_role_owners
                 .insert(grant.target_participant_id.clone());
-            if room.host_conn_id != Some(target_conn_id) && room.co_host_conn_ids.insert(target_conn_id)
+            if room.host_conn_id != Some(target_conn_id)
+                && room.co_host_conn_ids.insert(target_conn_id)
             {
                 permissions_changed = true;
             }
@@ -2716,6 +3009,34 @@ fn anon_roster_frame_locked(room: &RoomState) -> AnonRosterFrame {
     AnonRosterFrame {
         at_ms: now_ms(),
         participants,
+    }
+}
+
+fn build_anon_group_key_rotate_frame(room: &mut RoomState, at_ms: u64) -> AnonGroupKeyRotateFrame {
+    room.permissions_epoch = room.permissions_epoch.saturating_add(1);
+    let epoch = room.permissions_epoch.max(1);
+    let mut member_handles = room
+        .participants
+        .values()
+        .filter_map(|participant| {
+            if participant.state.hello_seen && participant.state.anonymous_mode {
+                participant.state.participant_handle.clone()
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    member_handles.sort();
+    let entropy = member_handles.join("|");
+    let key_wrap_hex = deterministic_signature_hex(
+        "anon_group_key_rotate",
+        &format!("{at_ms}|{epoch}|{entropy}"),
+    );
+    AnonGroupKeyRotateFrame {
+        sent_at_ms: at_ms,
+        epoch,
+        key_wrap_hex,
+        member_handles,
     }
 }
 
@@ -4023,7 +4344,8 @@ mod tests {
             target: ModerationTarget::All,
             action: ModerationAction::DisableMic,
         };
-        validate_moderation_sender_clock(&mut room, 1, &first).expect("first moderation should pass");
+        validate_moderation_sender_clock(&mut room, 1, &first)
+            .expect("first moderation should pass");
 
         let replay =
             validate_moderation_sender_clock(&mut room, 1, &first).expect_err("replay must fail");
@@ -4041,7 +4363,8 @@ mod tests {
             sent_at_ms: 11,
             ..first
         };
-        validate_moderation_sender_clock(&mut room, 1, &next).expect("newer moderation should pass");
+        validate_moderation_sender_clock(&mut room, 1, &next)
+            .expect("newer moderation should pass");
     }
 
     #[test]
@@ -4069,10 +4392,8 @@ mod tests {
             issued_by: "host@sora".to_string(),
             signature_hex: String::new(),
         };
-        signed.signature_hex = deterministic_signature_hex(
-            "moderation",
-            "host@sora|all|disable_mic|1",
-        );
+        signed.signature_hex =
+            deterministic_signature_hex("moderation", "host@sora|all|disable_mic|1");
         assert!(moderation_signed_signature_is_valid(&signed));
 
         signed.signature_hex = "ab".repeat(32);
@@ -4252,15 +4573,15 @@ mod tests {
         let host_frames = drain_frames(&mut host_rx);
         let alice_frames = drain_frames(&mut alice_rx);
         assert!(
-            host_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)),
+            host_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)
+            ),
             "host should receive legacy moderation audit frame"
         );
         assert!(
-            alice_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)),
+            alice_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)
+            ),
             "target should receive legacy moderation audit frame"
         );
         assert!(
@@ -4313,9 +4634,9 @@ mod tests {
 
         let host_frames = drain_frames(&mut host_rx);
         assert!(
-            host_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)),
+            host_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::Moderation(value) if value == &moderation)
+            ),
             "host should receive kick moderation audit frame"
         );
 
@@ -4336,7 +4657,10 @@ mod tests {
                 _ => {}
             }
         }
-        assert!(saw_kick_error, "kicked participant should receive error frame");
+        assert!(
+            saw_kick_error,
+            "kicked participant should receive error frame"
+        );
         assert!(saw_close, "kicked participant should receive close frame");
     }
 
@@ -4582,7 +4906,11 @@ mod tests {
 
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
-        let guest_state = &room.participants.get(&2).expect("guest still tracked").state;
+        let guest_state = &room
+            .participants
+            .get(&2)
+            .expect("guest still tracked")
+            .state;
         assert!(!guest_state.hello_seen);
         assert_eq!(room.e2ee_epochs.get(&2), None);
     }
@@ -4728,11 +5056,7 @@ mod tests {
 
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
-        let alice_state = &room
-            .participants
-            .get(&2)
-            .expect("alice tracked")
-            .state;
+        let alice_state = &room.participants.get(&2).expect("alice tracked").state;
         assert!(alice_state.hello_seen);
         assert!(alice_state.mic_enabled);
         assert!(alice_state.video_enabled);
@@ -5012,9 +5336,9 @@ mod tests {
 
         let host_frames = drain_frames(&mut host_rx);
         assert!(
-            host_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::Chat(ChatFrame { text, .. }) if text == "hello")),
+            host_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::Chat(ChatFrame { text, .. }) if text == "hello")
+            ),
             "host should still receive broadcasted chat frame"
         );
         assert!(contains_error_message(
@@ -5095,7 +5419,10 @@ mod tests {
                 )
             })
             .count();
-        assert_eq!(notice_count, 1, "backpressure notices should be rate-limited");
+        assert_eq!(
+            notice_count, 1,
+            "backpressure notices should be rate-limited"
+        );
 
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
@@ -5139,9 +5466,15 @@ mod tests {
                 hdr_display: false,
                 hdr_capture: false,
             };
-            handle_frame(&state, room_id, conn_id, test_peer(), KaigiFrame::Hello(hello))
-                .await
-                .expect("churn join should pass");
+            handle_frame(
+                &state,
+                room_id,
+                conn_id,
+                test_peer(),
+                KaigiFrame::Hello(hello),
+            )
+            .await
+            .expect("churn join should pass");
             expected_ids.insert(participant_id);
             drain_all_messages(&mut receivers);
         }
@@ -5175,9 +5508,15 @@ mod tests {
                 hdr_display: false,
                 hdr_capture: false,
             };
-            handle_frame(&state, room_id, conn_id, test_peer(), KaigiFrame::Hello(hello))
-                .await
-                .expect("late join should pass");
+            handle_frame(
+                &state,
+                room_id,
+                conn_id,
+                test_peer(),
+                KaigiFrame::Hello(hello),
+            )
+            .await
+            .expect("late join should pass");
             expected_ids.insert(participant_id);
             drain_all_messages(&mut receivers);
         }
@@ -5273,11 +5612,13 @@ mod tests {
                 let KaigiFrame::ParticipantPresenceDelta(delta) = frame else {
                     return None;
                 };
-                if delta.role_changes == vec![RoleChangeEntry {
-                    participant_id: "alice@sora".to_string(),
-                    role: RoleKind::CoHost,
-                    granted: true,
-                }] {
+                if delta.role_changes
+                    == vec![RoleChangeEntry {
+                        participant_id: "alice@sora".to_string(),
+                        role: RoleKind::CoHost,
+                        granted: true,
+                    }]
+                {
                     Some(delta.sequence)
                 } else {
                     None
@@ -5548,10 +5889,12 @@ mod tests {
         assert!(!room.anonymous_mode);
         assert_eq!(room.e2ee_epochs.get(&1), Some(&1));
         assert_eq!(room.e2ee_epochs.get(&2), Some(&alice_epoch));
-        assert!(room
-            .participants
-            .values()
-            .all(|participant| participant.state.hello_seen && !participant.state.waiting_room_pending));
+        assert!(
+            room.participants
+                .values()
+                .all(|participant| participant.state.hello_seen
+                    && !participant.state.waiting_room_pending)
+        );
     }
 
     #[tokio::test]
@@ -5764,9 +6107,15 @@ mod tests {
                 "host@sora|alice@sora|cohost|30",
             ),
         };
-        handle_frame(&state, room_id, 1, test_peer(), KaigiFrame::RoleGrant(first.clone()))
-            .await
-            .expect("first role grant should pass");
+        handle_frame(
+            &state,
+            room_id,
+            1,
+            test_peer(),
+            KaigiFrame::RoleGrant(first.clone()),
+        )
+        .await
+        .expect("first role grant should pass");
 
         let replay = RoleGrantFrame {
             issued_at_ms: 30,
@@ -5778,9 +6127,15 @@ mod tests {
                 "host@sora|alice@sora|cohost|30",
             ),
         };
-        handle_frame(&state, room_id, 1, test_peer(), KaigiFrame::RoleGrant(replay))
-            .await
-            .expect("replay should be converted to error frame");
+        handle_frame(
+            &state,
+            room_id,
+            1,
+            test_peer(),
+            KaigiFrame::RoleGrant(replay),
+        )
+        .await
+        .expect("replay should be converted to error frame");
 
         let host_frames = drain_frames(&mut host_rx);
         let alice_frames = drain_frames(&mut alice_rx);
@@ -5788,8 +6143,14 @@ mod tests {
             .iter()
             .filter(|frame| matches!(frame, KaigiFrame::RoleGrant(_)))
             .count();
-        assert_eq!(grant_audit_count, 1, "only first role grant should be audited");
-        assert!(contains_error_message(&host_frames, "replay/stale rejected"));
+        assert_eq!(
+            grant_audit_count, 1,
+            "only first role grant should be audited"
+        );
+        assert!(contains_error_message(
+            &host_frames,
+            "replay/stale rejected"
+        ));
         assert!(
             !contains_error_message(&alice_frames, "replay/stale rejected"),
             "only sender should receive replay rejection"
@@ -6066,9 +6427,15 @@ mod tests {
                 "host@sora|alice@sora|cohost|51",
             ),
         };
-        handle_frame(&state, room_id, 1, test_peer(), KaigiFrame::RoleRevoke(replay))
-            .await
-            .expect("replay should be converted to error frame");
+        handle_frame(
+            &state,
+            room_id,
+            1,
+            test_peer(),
+            KaigiFrame::RoleRevoke(replay),
+        )
+        .await
+        .expect("replay should be converted to error frame");
 
         let host_frames = drain_frames(&mut host_rx);
         let alice_frames = drain_frames(&mut alice_rx);
@@ -6080,7 +6447,10 @@ mod tests {
             revoke_audit_count, 1,
             "only first role revoke should be audited"
         );
-        assert!(contains_error_message(&host_frames, "replay/stale rejected"));
+        assert!(contains_error_message(
+            &host_frames,
+            "replay/stale rejected"
+        ));
         assert!(
             !contains_error_message(&alice_frames, "replay/stale rejected"),
             "only sender should receive replay rejection"
@@ -6206,7 +6576,10 @@ mod tests {
         .expect("replay should be converted to error frame");
 
         let host_frames = drain_frames(&mut host_rx);
-        assert!(contains_error_message(&host_frames, "replay/stale rejected"));
+        assert!(contains_error_message(
+            &host_frames,
+            "replay/stale rejected"
+        ));
 
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
@@ -6456,15 +6829,15 @@ mod tests {
         let host_frames = drain_frames(&mut host_rx);
         let alice_frames = drain_frames(&mut alice_rx);
         assert!(
-            host_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::RecordingNotice(value) if value == &notice)),
+            host_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::RecordingNotice(value) if value == &notice)
+            ),
             "host should receive recording notice"
         );
         assert!(
-            alice_frames
-                .iter()
-                .any(|frame| matches!(frame, KaigiFrame::RecordingNotice(value) if value == &notice)),
+            alice_frames.iter().any(
+                |frame| matches!(frame, KaigiFrame::RecordingNotice(value) if value == &notice)
+            ),
             "issuer should receive recording notice broadcast"
         );
 
@@ -7034,12 +7407,13 @@ mod tests {
         );
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
-        assert!(room
-            .participants
-            .get(&3)
-            .expect("bob exists")
-            .state
-            .screen_share_enabled);
+        assert!(
+            room.participants
+                .get(&3)
+                .expect("bob exists")
+                .state
+                .screen_share_enabled
+        );
     }
 
     #[tokio::test]
@@ -7085,7 +7459,10 @@ mod tests {
         .expect("replay should be converted to error frame");
 
         let alice_frames = drain_frames(&mut alice_rx);
-        assert!(contains_error_message(&alice_frames, "replay/stale rejected"));
+        assert!(contains_error_message(
+            &alice_frames,
+            "replay/stale rejected"
+        ));
 
         let rooms = state.rooms.lock().await;
         let room = rooms.get(&room_id).expect("room exists");
@@ -7365,7 +7742,8 @@ mod tests {
     fn role_grant_promotes_cohost_and_revoke_drops_it() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.host_conn_id = Some(1);
 
         let grant = RoleGrantFrame {
@@ -7401,7 +7779,8 @@ mod tests {
     fn role_grant_rejects_non_host_sender() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.host_conn_id = Some(1);
 
         let grant = RoleGrantFrame {
@@ -7419,7 +7798,8 @@ mod tests {
     fn role_grant_rejects_bad_signature() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.host_conn_id = Some(1);
 
         let grant = RoleGrantFrame {
@@ -7437,7 +7817,8 @@ mod tests {
     fn role_grant_rejects_replay_and_stale_issued_at() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.participants.insert(3, test_joined_participant("bob"));
         room.host_conn_id = Some(1);
 
@@ -7468,7 +7849,8 @@ mod tests {
     fn role_revoke_rejects_bad_signature() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.host_conn_id = Some(1);
         room.co_host_conn_ids.insert(2);
 
@@ -7487,7 +7869,8 @@ mod tests {
     fn role_revoke_rejects_replay_and_stale_issued_at() {
         let mut room = test_room_state(false);
         room.participants.insert(1, test_joined_participant("host"));
-        room.participants.insert(2, test_joined_participant("alice"));
+        room.participants
+            .insert(2, test_joined_participant("alice"));
         room.participants.insert(3, test_joined_participant("bob"));
         room.host_conn_id = Some(1);
         room.co_host_conn_ids.insert(2);
@@ -7614,8 +7997,7 @@ mod tests {
                 "host|true|true|false|false|true|400|2|10",
             ),
         };
-        let err =
-            apply_session_policy_update(&mut room, 1, &replay).expect_err("replay must fail");
+        let err = apply_session_policy_update(&mut room, 1, &replay).expect_err("replay must fail");
         assert!(err.contains("replay/stale rejected"));
     }
 
@@ -7645,7 +8027,8 @@ mod tests {
     #[test]
     fn join_policy_rejects_guest_when_guest_policy_disabled() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
         room.host_conn_id = Some(1);
         room.guest_join_allowed = false;
         room.participants.insert(2, test_pending_participant());
@@ -7654,17 +8037,16 @@ mod tests {
             validate_join_allowed(&room, 2, "guest-user"),
             Some("guest participants are not allowed by room policy".to_string())
         );
-        assert_eq!(
-            validate_join_allowed(&room, 2, "alice@sora"),
-            None
-        );
+        assert_eq!(validate_join_allowed(&room, 2, "alice@sora"), None);
     }
 
     #[test]
     fn join_policy_rejects_duplicate_participant_id() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
-        room.participants.insert(2, test_joined_participant("alice@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(2, test_joined_participant("alice@sora"));
         room.host_conn_id = Some(1);
         room.participants.insert(3, test_pending_participant());
 
@@ -7687,18 +8069,17 @@ mod tests {
     #[test]
     fn join_policy_rehello_rejects_participant_id_change() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
-        room.participants.insert(2, test_joined_participant("alice@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(2, test_joined_participant("alice@sora"));
         room.host_conn_id = Some(1);
 
         assert_eq!(
             validate_join_allowed(&room, 2, "bob@sora"),
             Some("participant_id cannot change after Hello".to_string())
         );
-        assert_eq!(
-            validate_join_allowed(&room, 2, "alice@sora"),
-            None
-        );
+        assert_eq!(validate_join_allowed(&room, 2, "alice@sora"), None);
     }
 
     #[test]
@@ -7710,7 +8091,8 @@ mod tests {
     #[test]
     fn admit_waiting_participant_transitions_to_joined_state() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
         room.host_conn_id = Some(1);
 
         let mut pending = test_pending_participant();
@@ -7723,25 +8105,29 @@ mod tests {
         assert_eq!(outcome.snapshot.participant_id, "guest-user");
         assert_eq!(outcome.presence_delta.joined.len(), 1);
         assert_eq!(outcome.presence_delta.left.len(), 0);
-        assert!(room
-            .participants
-            .get(&2)
-            .expect("participant should remain")
-            .state
-            .hello_seen);
-        assert!(!room
-            .participants
-            .get(&2)
-            .expect("participant should remain")
-            .state
-            .waiting_room_pending);
+        assert!(
+            room.participants
+                .get(&2)
+                .expect("participant should remain")
+                .state
+                .hello_seen
+        );
+        assert!(
+            !room
+                .participants
+                .get(&2)
+                .expect("participant should remain")
+                .state
+                .waiting_room_pending
+        );
         assert_eq!(room.e2ee_epochs.get(&2), Some(&0));
     }
 
     #[test]
     fn deny_waiting_participant_removes_pending_participant() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
         room.host_conn_id = Some(1);
 
         let mut pending = test_pending_participant();
@@ -7758,9 +8144,11 @@ mod tests {
     #[test]
     fn waiting_room_actions_reject_non_pending_targets() {
         let mut room = test_room_state(false);
-        room.participants.insert(1, test_joined_participant("host@sora"));
+        room.participants
+            .insert(1, test_joined_participant("host@sora"));
         room.host_conn_id = Some(1);
-        room.participants.insert(2, test_joined_participant("member@sora"));
+        room.participants
+            .insert(2, test_joined_participant("member@sora"));
 
         let admit_err =
             admit_waiting_participant(&mut room, 2).expect_err("admit must reject non-pending");

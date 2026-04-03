@@ -2408,7 +2408,8 @@ mod tests {
 
     #[test]
     fn decode_rejects_legacy_raw_join_frame() {
-        let err = decode_frame("JOIN room=daily participant=alice").expect_err("legacy frame must fail");
+        let err =
+            decode_frame("JOIN room=daily participant=alice").expect_err("legacy frame must fail");
         assert!(matches!(err, CodecError::InvalidJson(_)));
     }
 

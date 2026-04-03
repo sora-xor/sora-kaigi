@@ -55,6 +55,18 @@ pub enum KaigiFrame {
     ParticipantPresenceDelta(ParticipantPresenceDeltaFrame),
     Chat(ChatFrame),
     ParticipantState(ParticipantStateFrame),
+    /// Endpoint media encode/decode capability declaration.
+    MediaCapability(MediaCapabilityFrame),
+    /// Participant media track state update.
+    MediaTrackState(MediaTrackStateFrame),
+    /// Encoded Norito video segment payload.
+    VideoSegment(VideoSegmentFrame),
+    /// Encoded Norito audio packet payload.
+    AudioPacket(AudioPacketFrame),
+    /// Anonymous group-key rotation notice.
+    AnonGroupKeyRotate(AnonGroupKeyRotateFrame),
+    /// Anonymous group-key encrypted payload envelope.
+    AnonEncryptedPayload(AnonEncryptedPayloadFrame),
     /// Client-to-hub payment signal (dev harness).
     ///
     /// In production this should be backed by XOR transfers or Nexus micropayments.
@@ -225,6 +237,105 @@ pub struct ParticipantStateFrame {
     pub mic_enabled: Option<bool>,
     pub video_enabled: Option<bool>,
     pub screen_share_enabled: Option<bool>,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum MediaTrackKind {
+    Camera,
+    ScreenShare,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum VideoCodecKind {
+    NoritoBaseline,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum AudioCodecKind {
+    NoritoNative,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct MediaCapabilityFrame {
+    pub reported_at_ms: u64,
+    pub participant_id: String,
+    pub max_video_width: u16,
+    pub max_video_height: u16,
+    pub max_video_fps: u8,
+    pub video_codecs: Vec<VideoCodecKind>,
+    pub audio_codecs: Vec<AudioCodecKind>,
+    pub audio_sample_rate: u32,
+    pub audio_channels: u8,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct MediaTrackStateFrame {
+    pub updated_at_ms: u64,
+    pub participant_id: String,
+    pub mic_enabled: bool,
+    pub camera_enabled: bool,
+    pub screen_share_enabled: bool,
+    pub active_video_track: MediaTrackKind,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct VideoSegmentFrame {
+    pub sent_at_ms: u64,
+    pub participant_id: String,
+    pub segment_number: u64,
+    pub frame_width: u16,
+    pub frame_height: u16,
+    pub frame_duration_ns: u32,
+    pub payload: Vec<u8>,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct AudioPacketFrame {
+    pub sent_at_ms: u64,
+    pub participant_id: String,
+    pub sequence: u64,
+    pub sample_rate: u32,
+    pub channels: u8,
+    pub frame_samples: u16,
+    pub payload: Vec<u8>,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub enum AnonymousPayloadKind {
+    Control,
+    VideoSegment,
+    AudioPacket,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct AnonGroupKeyRotateFrame {
+    pub sent_at_ms: u64,
+    pub epoch: u64,
+    /// Wrapped key bytes encoded as lower-case hex.
+    pub key_wrap_hex: String,
+    pub member_handles: Vec<String>,
+}
+
+#[allow(unexpected_cfgs)]
+#[derive(Clone, Debug, PartialEq, Eq, NoritoSerialize, NoritoDeserialize)]
+pub struct AnonEncryptedPayloadFrame {
+    pub sent_at_ms: u64,
+    pub sender_handle: String,
+    pub epoch: u64,
+    pub kind: AnonymousPayloadKind,
+    /// XChaCha20-Poly1305 nonce encoded as lower-case hex (24 bytes).
+    pub nonce_hex: String,
+    /// Ciphertext + tag encoded as lower-case hex.
+    pub ciphertext_hex: String,
 }
 
 #[allow(unexpected_cfgs)]
@@ -460,8 +571,8 @@ pub struct ErrorFrame {
     pub message: String,
 }
 
-pub const PROTOCOL_VERSION: u16 = 5;
-pub const MAX_FRAME_LEN: usize = 256 * 1024;
+pub const PROTOCOL_VERSION: u16 = 6;
+pub const MAX_FRAME_LEN: usize = 2 * 1024 * 1024;
 pub const MAX_ANON_PARTICIPANT_HANDLE_LEN: usize = 128;
 pub const MAX_ESCROW_ID_LEN: usize = 128;
 pub const MAX_ESCROW_PROOF_HEX_LEN: usize = 64 * 1024;
@@ -854,6 +965,57 @@ mod tests {
                     role: RoleKind::CoHost,
                     granted: true,
                 }],
+            }),
+            KaigiFrame::MediaCapability(MediaCapabilityFrame {
+                reported_at_ms: 11,
+                participant_id: "p-7".to_string(),
+                max_video_width: 1280,
+                max_video_height: 720,
+                max_video_fps: 30,
+                video_codecs: vec![VideoCodecKind::NoritoBaseline],
+                audio_codecs: vec![AudioCodecKind::NoritoNative],
+                audio_sample_rate: 48_000,
+                audio_channels: 2,
+            }),
+            KaigiFrame::MediaTrackState(MediaTrackStateFrame {
+                updated_at_ms: 12,
+                participant_id: "p-7".to_string(),
+                mic_enabled: true,
+                camera_enabled: true,
+                screen_share_enabled: false,
+                active_video_track: MediaTrackKind::Camera,
+            }),
+            KaigiFrame::VideoSegment(VideoSegmentFrame {
+                sent_at_ms: 13,
+                participant_id: "p-7".to_string(),
+                segment_number: 42,
+                frame_width: 160,
+                frame_height: 90,
+                frame_duration_ns: 33_333_333,
+                payload: vec![0xAA; 256],
+            }),
+            KaigiFrame::AudioPacket(AudioPacketFrame {
+                sent_at_ms: 14,
+                participant_id: "p-7".to_string(),
+                sequence: 100,
+                sample_rate: 48_000,
+                channels: 2,
+                frame_samples: 240,
+                payload: vec![0xBB; 64],
+            }),
+            KaigiFrame::AnonGroupKeyRotate(AnonGroupKeyRotateFrame {
+                sent_at_ms: 15,
+                epoch: 9,
+                key_wrap_hex: "11".repeat(32),
+                member_handles: vec!["h-1".to_string(), "h-2".to_string()],
+            }),
+            KaigiFrame::AnonEncryptedPayload(AnonEncryptedPayloadFrame {
+                sent_at_ms: 16,
+                sender_handle: "h-1".to_string(),
+                epoch: 9,
+                kind: AnonymousPayloadKind::VideoSegment,
+                nonce_hex: "22".repeat(24),
+                ciphertext_hex: "33".repeat(128),
             }),
         ];
 
